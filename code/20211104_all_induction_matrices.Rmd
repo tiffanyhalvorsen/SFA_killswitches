@@ -1,0 +1,1760 @@
+---
+title: "Combining all matrices"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+
+Import individual matrices from different days into their own dataframes:
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(plater)
+library(tidyverse)
+library(lubridate) #hms function
+library(reshape2)
+```
+
+```{r}
+
+#Process each matrix individually as growth curves with mean + sd
+
+TH88 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211026_TH88_matrix.csv")
+TH88_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211026_TH88_matrix_KEYS_&firstRead_2.csv",
+  well_ids_column = "Key")
+
+TH88_t0 <- TH88_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH88_keys <- TH88_keys[-2]
+
+Time <- 0
+TH88_t0 <- cbind(Time, TH88_t0)
+TH88_t0 <- pivot_longer(TH88_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH88_2 <- pivot_longer(TH88, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH88_2$Time)
+TH88_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH88_2$Time <- as.numeric(TH88_2$Time)
+TH88_2 <- rbind(TH88_t0, TH88_2)
+
+TH88_2 <- full_join(TH88_2, TH88_keys, by = "Key")
+
+
+
+
+TH99 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211028_TH99_matrix.csv")
+TH99_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211028_TH99_matrix_KEYS_&firstRead_2.csv",
+  well_ids_column = "Key")
+
+TH99_t0 <- TH99_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH99_keys <- TH99_keys[-2]
+
+Time <- 0
+TH99_t0 <- cbind(Time, TH99_t0)
+TH99_t0 <- pivot_longer(TH99_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH99_2 <- pivot_longer(TH99, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH99_2$Time)
+TH99_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH99_2$Time <- as.numeric(TH99_2$Time)
+TH99_2 <- rbind(TH99_t0, TH99_2)
+
+TH99_2 <- full_join(TH99_2, TH99_keys, by = "Key")
+
+means_TH99_all <- TH99_2 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+
+
+
+
+
+
+TH128 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211027_TH128_matrix.csv")
+TH128_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211027_TH128_matrix_KEYS_&firstRead_2.csv",
+  well_ids_column = "Key")
+
+TH128_t0 <- TH128_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH128_keys <- TH128_keys[-2]
+
+Time <- 0
+TH128_t0 <- cbind(Time, TH128_t0)
+TH128_t0 <- pivot_longer(TH128_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH128_2 <- pivot_longer(TH128, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH128_2$Time)
+TH128_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH128_2$Time <- as.numeric(TH128_2$Time)
+TH128_2 <- rbind(TH128_t0, TH128_2)
+
+TH128_2 <- full_join(TH128_2, TH128_keys, by = "Key")
+
+means_TH128_all <- TH128_2 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+
+
+TH128b <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220114_TH128repeat_matrix.csv")
+TH128_keysb <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220114_TH128repeat_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH128_t0b <- TH128_keysb[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH128_keysb <- TH128_keysb[-2]
+
+Time <- 0
+TH128_t0b <- cbind(Time, TH128_t0b)
+TH128_t0b <- pivot_longer(TH128_t0b, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH128_2b <- pivot_longer(TH128b, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH128_2b$Time)
+TH128_2b$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH128_2b$Time <- as.numeric(TH128_2b$Time)
+TH128_2b <- rbind(TH128_t0b, TH128_2b)
+
+TH128_2b <- full_join(TH128_2b, TH128_keysb, by = "Key")
+
+means_TH128_allb <- TH128_2b %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+
+
+
+TH126 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211103_TH126_matrix.csv")
+TH126_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211103_TH126_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH126_t0 <- TH126_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH126_keys <- TH126_keys[-2]
+
+Time <- 0
+TH126_t0 <- cbind(Time, TH126_t0)
+TH126_t0 <- pivot_longer(TH126_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH126_2 <- pivot_longer(TH126, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH126_2$Time)
+TH126_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH126_2$Time <- as.numeric(TH126_2$Time)
+TH126_2 <- rbind(TH126_t0, TH126_2)
+
+TH126_2 <- full_join(TH126_2, TH126_keys, by = "Key")
+
+means_TH126_all <- TH126_2 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+
+
+TH100 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211104_TH100_matrix.csv")
+TH100_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211104_TH100_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH100_t0 <- TH100_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH100_keys <- TH100_keys[-2]
+
+Time <- 0
+TH100_t0 <- cbind(Time, TH100_t0)
+TH100_t0 <- pivot_longer(TH100_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH100_2 <- pivot_longer(TH100, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH100_2$Time)
+TH100_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH100_2$Time <- as.numeric(TH100_2$Time)
+TH100_2 <- rbind(TH100_t0, TH100_2)
+
+TH100_2 <- full_join(TH100_2, TH100_keys, by = "Key")
+
+means_TH100_all <- TH100_2 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+
+
+
+TH131 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211109_TH131_matrix.csv")
+TH131_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211109_TH131_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH131_t0 <- TH131_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH131_keys <- TH131_keys[-2]
+
+Time <- 0
+TH131_t0 <- cbind(Time, TH131_t0)
+TH131_t0 <- pivot_longer(TH131_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH131_2 <- pivot_longer(TH131, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH131_2$Time)
+TH131_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH131_2$Time <- as.numeric(TH131_2$Time)
+TH131_2 <- rbind(TH131_t0, TH131_2)
+
+TH131_2 <- full_join(TH131_2, TH131_keys, by = "Key")
+
+
+
+TH99b <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211110_TH99repeat_matrix.csv")
+TH99b_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211110_TH99repeat_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH99b_t0 <- TH99b_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH99b_keys <- TH99b_keys[-2]
+
+Time <- 0
+TH99b_t0 <- cbind(Time, TH99b_t0)
+TH99b_t0 <- pivot_longer(TH99b_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH99b_2 <- pivot_longer(TH99b, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH99b_2$Time)
+TH99b_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH99b_2$Time <- as.numeric(TH99b_2$Time)
+TH99b_2 <- rbind(TH99b_t0, TH99b_2)
+
+TH99b_2 <- full_join(TH99b_2, TH99b_keys, by = "Key")
+
+
+
+
+TH100b <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211115_TH100repeat_matrix.csv")
+TH100b_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211115_TH100repeat_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH100b_t0 <- TH100b_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH100b_keys <- TH100b_keys[-2]
+
+Time <- 0
+TH100b_t0 <- cbind(Time, TH100b_t0)
+TH100b_t0 <- pivot_longer(TH100b_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH100b_2 <- pivot_longer(TH100b, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH100b_2$Time)
+TH100b_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH100b_2$Time <- as.numeric(TH100b_2$Time)
+TH100b_2 <- rbind(TH100b_t0, TH100b_2)
+
+TH100b_2 <- full_join(TH100b_2, TH100b_keys, by = "Key")
+```
+
+
+
+
+```{r}
+TH177 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220105_TH177_matrix.csv")
+TH177_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220105_TH177_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH177_t0 <- TH177_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH177_keys <- TH177_keys[-2]
+
+Time <- 0
+TH177_t0 <- cbind(Time, TH177_t0)
+TH177_t0 <- pivot_longer(TH177_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH177_2 <- pivot_longer(TH177, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH177_2$Time)
+TH177_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH177_2$Time <- as.numeric(TH177_2$Time)
+TH177_2 <- rbind(TH177_t0, TH177_2)
+
+TH177_2 <- full_join(TH177_2, TH177_keys, by = "Key")
+
+means_TH177_all <- TH177_2 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+
+
+
+
+TH177b <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220107_TH177repeat_matrix.csv")
+TH177b_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220107_TH177repeat_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH177b_t0 <- TH177b_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH177b_keys <- TH177b_keys[-2]
+
+Time <- 0
+TH177b_t0 <- cbind(Time, TH177b_t0)
+TH177b_t0 <- pivot_longer(TH177b_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH177b_2 <- pivot_longer(TH177b, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH177b_2$Time)
+TH177b_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH177b_2$Time <- as.numeric(TH177b_2$Time)
+TH177b_2 <- rbind(TH177b_t0, TH177b_2)
+
+TH177b_2 <- full_join(TH177b_2, TH177b_keys, by = "Key")
+
+
+
+
+
+TH179 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220111_TH179_matrix.csv")
+TH179_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220111_TH179_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+TH179_t0 <- TH179_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+TH179_keys <- TH179_keys[-2]
+
+Time <- 0
+TH179_t0 <- cbind(Time, TH179_t0)
+TH179_t0 <- pivot_longer(TH179_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH179_2 <- pivot_longer(TH179, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH179_2$Time)
+TH179_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH179_2$Time <- as.numeric(TH179_2$Time)
+TH179_2 <- rbind(TH179_t0, TH179_2)
+
+TH179_2 <- full_join(TH179_2, TH179_keys, by = "Key")
+
+means_TH179_all <- TH179_2 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+```
+
+```{r}
+TH131_noIPTG <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220119_TH131repeat(woIPTG)_matrix.csv")
+TH131_noIPTG_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220119_TH131repeat(woIPTG)_matrix_KEYS_&firstread.csv",
+  well_ids_column = "Key")
+
+TH131_noIPTG_t0 <- TH131_noIPTG_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH131_noIPTG_keys <- TH131_keys[-2]
+
+Time <- 0
+TH131_noIPTG_t0 <- cbind(Time, TH131_noIPTG_t0)
+TH131_noIPTG_t0 <- pivot_longer(TH131_noIPTG_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH131_noIPTG_2 <- pivot_longer(TH131_noIPTG, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH131_noIPTG_2$Time)
+TH131_noIPTG_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH131_noIPTG_2$Time <- as.numeric(TH131_noIPTG_2$Time)
+TH131_noIPTG_2 <- rbind(TH131_noIPTG_t0, TH131_noIPTG_2)
+
+TH131_noIPTG_2 <- full_join(TH131_noIPTG_2, TH131_noIPTG_keys, by = "Key")
+TH131_noIPTG_2 <- TH131_noIPTG_2[-4]
+
+
+
+
+TH100_noIPTG <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220126_TH100repeat(woIPTG)_matrix.csv")
+TH100_noIPTG_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220126_TH100repeat(woIPTG)_matrix_KEYS&firstread.csv",
+  well_ids_column = "Key")
+
+TH100_noIPTG_t0 <- TH100_noIPTG_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH100_noIPTG_keys <- TH100_keys[-2]
+
+Time <- 0
+TH100_noIPTG_t0 <- cbind(Time, TH100_noIPTG_t0)
+TH100_noIPTG_t0 <- pivot_longer(TH100_noIPTG_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH100_noIPTG_2 <- pivot_longer(TH100_noIPTG, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH100_noIPTG_2$Time)
+TH100_noIPTG_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH100_noIPTG_2$Time <- as.numeric(TH100_noIPTG_2$Time)
+TH100_noIPTG_2 <- rbind(TH100_noIPTG_t0, TH100_noIPTG_2)
+
+TH100_noIPTG_2 <- full_join(TH100_noIPTG_2, TH100_noIPTG_keys, by = "Key")
+TH100_noIPTG_2 <- TH100_noIPTG_2[-4]
+
+```
+
+ALTERED IMMUNITIES (Immunity E2, Tsi2)
+
+```{r}
+
+TH240 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220302_TH240_matrix.csv")
+TH240_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220302_TH240_matrix_KEYS&firstread.csv",
+  well_ids_column = "Key")
+
+TH240_t0 <- TH240_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH100_noIPTG_keys <- TH100_keys[-2]
+
+Time <- 0
+TH240_t0 <- cbind(Time, TH240_t0)
+TH240_t0 <- pivot_longer(TH240_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH240_2 <- pivot_longer(TH240, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH240_2$Time)
+TH240_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH240_2$Time <- as.numeric(TH240_2$Time)
+TH240_2 <- rbind(TH240_t0, TH240_2)
+
+TH240_2 <- full_join(TH240_2, TH240_keys, by = "Key")
+TH240_2 <- TH240_2[-4]
+
+
+
+
+
+TH237 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220303_TH237_matrix.csv")
+TH237_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220303_TH237_matrix_KEYS&firstread.csv",
+  well_ids_column = "Key")
+
+TH237_t0 <- TH237_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH100_noIPTG_keys <- TH100_keys[-2]
+
+Time <- 0
+TH237_t0 <- cbind(Time, TH237_t0)
+TH237_t0 <- pivot_longer(TH237_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH237_2 <- pivot_longer(TH237, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH237_2$Time)
+TH237_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH237_2$Time <- as.numeric(TH237_2$Time)
+TH237_2 <- rbind(TH237_t0, TH237_2)
+
+TH237_2 <- full_join(TH237_2, TH237_keys, by = "Key")
+TH237_2 <- TH237_2[-4]
+
+
+
+
+TH245 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220311_TH245repeat_matrix.csv")
+TH245_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220311_TH245repeat_matrix_KEYS&firstread.csv",
+  well_ids_column = "Key")
+
+TH245_t0 <- TH245_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH100_noIPTG_keys <- TH100_keys[-2]
+
+Time <- 0
+TH245_t0 <- cbind(Time, TH245_t0)
+TH245_t0 <- pivot_longer(TH245_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH245_2 <- pivot_longer(TH245, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH245_2$Time)
+TH245_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH245_2$Time <- as.numeric(TH245_2$Time)
+TH245_2 <- rbind(TH245_t0, TH245_2)
+
+TH245_2 <- full_join(TH245_2, TH245_keys, by = "Key")
+TH245_2 <- TH245_2[-4]
+
+
+
+
+
+TH249 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220317_TH249_matrix.csv")
+TH249_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220317_TH249_matrix_KEYS&firstread.csv",
+  well_ids_column = "Key")
+
+TH249_t0 <- TH249_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH100_noIPTG_keys <- TH100_keys[-2]
+
+Time <- 0
+TH249_t0 <- cbind(Time, TH249_t0)
+TH249_t0 <- pivot_longer(TH249_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH249_2 <- pivot_longer(TH249, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH249_2$Time)
+TH249_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH249_2$Time <- as.numeric(TH249_2$Time)
+TH249_2 <- rbind(TH249_t0, TH249_2)
+
+TH249_2 <- full_join(TH249_2, TH249_keys, by = "Key")
+TH249_2 <- TH249_2[-4]
+
+
+
+
+TH253 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220324_TH253_matrix.csv")
+TH253_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220324_TH253_matrix_KEYS&firstread.csv",
+  well_ids_column = "Key")
+
+TH253_t0 <- TH253_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH100_noIPTG_keys <- TH100_keys[-2]
+
+Time <- 0
+TH253_t0 <- cbind(Time, TH253_t0)
+TH253_t0 <- pivot_longer(TH253_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+TH253_2 <- pivot_longer(TH253, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+
+y <- hms(TH253_2$Time)
+TH253_2$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH253_2$Time <- as.numeric(TH253_2$Time)
+TH253_2 <- rbind(TH253_t0, TH253_2)
+
+TH253_2 <- full_join(TH253_2, TH253_keys, by = "Key")
+TH253_2 <- TH253_2[-4]
+```
+
+CALCULATE RELATIVE GROWTH OF ALTERED IMMUNITIES WITH WT IMMUNITY SYSTEMS
+
+```{r}
+# Combine growth curves
+curves_Imm <- rbind(TH126_2, TH128_2)
+curves_Imm <- rbind(curves_Imm, TH240_2)
+curves_Imm <- rbind(curves_Imm, TH237_2)
+#curves_Imm <- rbind(curves_Imm, TH128_2b)
+curves_Imm <- rbind(curves_Imm, TH245_2)
+curves_Imm <- rbind(curves_Imm, TH249_2)
+curves_Imm <- rbind(curves_Imm, TH253_2)
+
+
+# Means for all
+
+curves_Imm_means <- curves_Imm %>%
+  #select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+rel_growth_Imm <- curves_Imm %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, Time) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0]))
+
+rel_growth_Imm <- rel_growth_Imm %>%
+  select(-OD600) %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarize_at(.vars = vars(rel_growth), .funs = c(meanRG = mean, sdRG = sd))
+
+rel_growth_Imm_small <- rel_growth_Imm[-6]
+rel_growth_Imm_small$`IPTG (mM)` <- as.factor(rel_growth_Imm_small$`IPTG (mM)`)
+rel_growth_Imm_small$`cumate (mM)` <- as.factor(rel_growth_Imm_small$`cumate (mM)`)
+rel_growth_Imm_small$`Time` <- round(rel_growth_Imm_small$`Time`, digits=2)
+                                          
+```
+
+
+PLOT ALTERED IMMUNITY SYSTEMS IN MATRIX/GRID FORMAT
+
+```{r}
+# Plot relative growth on faceted grid
+
+# Re-order strains to keep color mapping consistent between graphs
+
+rel_growth_Imm_small$Strain <- factor(rel_growth_Imm_small$Strain,
+                         levels = c("TH126", "TH240", "TH128", "TH237","TH249", "TH245", "TH253"))
+
+strain_names_imm <- as_labeller(
+                c('TH126' = "Tse2-Tsi2",
+                  'TH128' = "ColicinE2-ImmE2",
+                  'TH240' = "Tsi2-ssrA",
+                  'TH237' = "Imm2-ssrA",
+                  'TH245' = "Imm2\n[YY54-55AA, D51A]",
+                  'TH249' = "Imm2\n[Y54A]",
+                  'TH253' = "Imm2\n[YY54-55AA, D51A]-ssrA"))
+
+rel_growth_Imm_small %>%
+  filter(`Time` == 8.01 | `Time` == 8.17 | `Time` == 8.18) %>%
+  filter(Strain == "TH240" | Strain == "TH237") %>%
+  group_by(Strain) %>%
+  ggplot(aes(x=`cumate (mM)`, y=`IPTG (mM)`, fill=meanRG)) +
+  geom_tile(color = "white", size=0.1) +
+  facet_wrap(~Strain, labeller = strain_names_imm, scales = "free_x", ncol = 6) +
+  scale_fill_viridis_c(name = "growth relative to\nuninhibited sample") +
+  labs(x="toxin (cumate, mM)", y="antitoxin (IPTG, mM)") +
+  theme(panel.background = element_blank(),
+        strip.background = element_blank(), 
+        legend.position = "top",
+        axis.text = element_text(size = 9),
+        text = element_text(size = 11),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 9),
+        strip.text.x = element_text(size = 8),
+        legend.key.size = unit(0.6, 'cm')
+        )
+
+  
+```
+```{r}
+ggsave(filename = "20220323_matrices_alteredimmunities_Paper.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/altered_immunities", width = 9, height = 3.5, units = "in", device='png', dpi=300)
+```
+
+
+PLOT ALTERED IMMUNITIES AS GROWTH CURVES WITH RELATIVE GROWTH CALCULATION INCLUDED
+
+```{r}
+# Plot growth curves for research SLAM talk
+
+curves_Col <- curves_Imm_means %>%
+  filter(Strain == "TH253" | Strain == "TH128") %>%
+  filter(`IPTG (mM)` == 0) %>%
+  filter(`cumate (mM)` == 0 | `cumate (mM)` == 1)
+
+curves_Col$`cumate (mM)` <- as.factor(curves_Col$`cumate (mM)`)
+
+curves_Col %>%
+  select(Time, meanOD, Strain, sdOD) %>%
+  ggplot(aes(x = Time, y = meanOD, color = `cumate (mM)` , group = `cumate (mM)`)) +
+  facet_wrap(~ Strain, nrow = 1, ncol = 5) +
+  geom_line(size = 2) +  
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 1) +
+  scale_color_manual(values = c("1" = "#A0DA14",
+                                "0" = "#D11F1F")) +
+  labs(x = 'Time (hrs)', 
+       y = expression('OD'[600])) +
+  scale_x_continuous(limits = c(0,19), breaks = seq(0,19,4)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  #scale_color_gradient(low = "#DCCC15", 
+  #                     high = "#876493",
+  #                     guide = "legend", 
+  #                     aesthetics = "color", 
+  #                     values = cumate_vals,
+  #                     na.value = NA) +
+  #scale_colour_brewer(palette = "spectral", direction = -1) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "transparent",colour = NA), # or theme_blank()
+        plot.background = element_rect(fill = "transparent", color = NA),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 14),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        strip.text.x = element_text(size = 12),
+        axis.title = element_text(size = 12)
+          )
+
+
+```
+```{r}
+ggsave(filename = "TH128_TH253_curves_SLAM.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens", width = 8, height = 3.5, units = "in", device='png', dpi=300, bg = "transparent")
+```
+
+```{r}
+
+# Make matrix with growth curves + keep same heatmap aesthetic
+
+rel_growth_imm_2 <- curves_Imm %>%
+  group_by(`Strain`, `IPTG (mM)`, Time) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0]))
+# 
+# rel_growth_all$`Time` <- round(rel_growth_all$`Time`, digits=2)
+# 
+# rel_growth_all$Strain <- factor(rel_growth_all$Strain,
+#                          levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128"))
+rel_growth_Imm_small$Strain <- factor(rel_growth_Imm_small$Strain,
+                         levels = c("TH126", "TH240", "TH237", "TH128"))
+
+replicate1_Imm <- filter(curves_Imm, Replicate == 1)
+replicate2_Imm <- filter(curves_Imm, Replicate == 2)
+replicate3_Imm <- filter(curves_Imm, Replicate == 3)
+replicate4_Imm <- filter(curves_Imm, Replicate == 4)
+
+replicate1_Imm$`Time` <- round(replicate1_Imm$`Time`, digits=2)
+replicate2_Imm$`Time` <- round(replicate2_Imm$`Time`, digits=2)
+replicate3_Imm$`Time` <- round(replicate3_Imm$`Time`, digits=2)
+replicate4_Imm$`Time` <- round(replicate4_Imm$`Time`, digits=2)
+
+separated_curves <- rbind(replicate1_Imm, replicate2_Imm)
+separated_curves <- rbind(separated_curves, replicate3_Imm)
+separated_curves <- rbind(separated_curves, replicate4_Imm)
+
+rel_growth_imm_2$`Time` <- round(rel_growth_imm_2$`Time`, digits=2)
+
+
+data_summary_Imm <- full_join(separated_curves,rel_growth_imm_2)
+
+data_summary_Imm <- data_summary_Imm %>%
+  select(-Key) %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  mutate(meanRG = mean(rel_growth))
+
+
+data_summary_Imm$`IPTG (mM)` <- factor(data_summary_Imm$`IPTG (mM)`,
+                                   levels = c("1", "0.5", "0.3", "0.2", "0.1", "0.07", "0.02", "0"))
+
+data_summary_Imm %>%
+  filter(`Strain` == 'TH245') %>%
+  group_by(Replicate) %>%
+  ggplot(aes(group = Replicate, color = meanRG)) +
+  #geom_tile(color = "white", size = 0.1, aes(x=`cumate (mM)`, y=`IPTG (mM)`, fill=meanRG)) +
+  geom_line(aes(x = `Time`, y = `OD600`), size = 0.8) +
+  #scale_color_viridis_c(name = "growth relative to\nuninhibited sample", limits = c(0, 1), oob = scales::squish) +
+  scale_color_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
+    ifelse(x<1, 
+           scales::rescale(x,
+                           to = to,
+                           from = c(min(x, na.rm = TRUE), 1)),
+           1)}) +
+  scale_y_continuous(name = expression('OD'[600]), 
+                     sec.axis = dup_axis(name = "antitoxin (IPTG, mM)", 
+                                                         labels = NULL, 
+                                                         breaks = NULL)) +
+  scale_x_continuous(name = "Time (hrs)", 
+                     sec.axis = dup_axis(name = "toxin (cumate, mM)", 
+                                                        labels = NULL, 
+                                                        breaks = NULL)) +
+  facet_grid(rows = vars(`IPTG (mM)`), cols = vars(`cumate (mM)`), scales = "free_x") +
+  labs(color = "growth relative to\nuninhibited sample") +
+  theme(text = element_text(size = 12),
+        plot.title = element_text(color = "black", face = "bold", size = 12),
+        axis.text = element_text(size = 8), 
+        strip.background = element_rect(size=1, fill = "white"),
+        legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size = 7),
+        legend.position = "bottom",
+        legend.title = element_text(size = 9))
+
+```
+```{r}
+ggsave(filename = "20220324_matrix&Curves_TH245_2Replicates.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 7, height = 6.5, units = "in", device='png', dpi=300)
+```
+
+
+SINGLE TOXINS: EcoRI, LysE, Gef, TisB (Pcym)
+
+```{r}
+
+TH105 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20201020_TH146_titration_nM_range.csv")
+TH105_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211115_TH100repeat_matrix_KEYS_&firstRead.csv",
+  well_ids_column = "Key")
+
+#need to re-do in Synergy plate reader
+
+
+
+TH124 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20210920_Synergy_ToxinScreen2_Plate1.csv")
+TH124_keys <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20210920_keys_forEcoRIonly.csv")
+
+TH124 <- select(TH124, -B22)
+TH124 <- pivot_longer(TH124, cols = A1:G24, names_to = "Key", values_to = "OD600")
+
+TH124 <- full_join(TH124, TH124_keys, by = "Key")
+
+TH124 <- subset(TH124, Strain == 'TH124')
+
+y <- hms(TH124$Time)
+TH124$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH124$Time <- round(as.numeric(TH124$Time), digits = 2)
+
+```
+
+Repeated EcoRI titration with the same cumate concentrations
+The starting ODs were higher than intended, though. But, as I'm measuring
+relative growth it shouldn't really matter unless it affects perceived cumate
+concentrations at the onset of the assay
+
+```{r}
+# Second dataset for EcoRI (repeated with the same concentrations of cumate)
+# additional single toxins
+
+
+TH124 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211206_EcoRI_titration.csv")
+TH124_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20211206_EcoRI_titration_KEYS.csv",
+  well_ids_column = "Key")
+
+TH124 <- pivot_longer(TH124, cols = F01:G02, names_to = "Key", values_to = "OD600")
+
+TH124 <- full_join(TH124, TH124_keys, by = "Key")
+
+y <- hms(TH124$`Time`)
+TH124$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH124$Time <- round(as.numeric(TH124$Time), digits = 2)
+
+rel_growth_TH124 <- TH124 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, Time) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0]))
+
+rel_growth_TH124 <- rel_growth_TH124 %>%
+  select(-OD600) %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarize_at(.vars = vars(rel_growth), .funs = c(meanRG = mean, sdRG = sd))
+
+rel_growth_TH124 <- rel_growth_TH124[-6]
+rel_growth_TH124$`IPTG (mM)` <- as.factor(rel_growth_TH124$`IPTG (mM)`)
+rel_growth_TH124$`cumate (mM)` <- as.factor(rel_growth_TH124$`cumate (mM)`)
+rel_growth_TH124$`Time` <- round(rel_growth_TH124$`Time`, digits=2)
+```
+
+```{r}
+TH203_TH204 <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220203_TH86_TH203_TH204_titration.csv")
+TH203_TH204_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220203_TH86_TH203_TH204_titration_KEYS_&firstread.csv",
+  well_ids_column = "Key")
+
+TH203_TH204_t0 <- TH203_TH204_keys[1:2] %>%
+  pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+#TH100_noIPTG_keys <- TH100_keys[-2]
+
+Time <- 0
+TH203_TH204_t0 <- cbind(Time, TH203_TH204_t0)
+TH203_TH204_t0 <- pivot_longer(TH203_TH204_t0, cols = A01:C12, names_to = "Key", values_to = "OD600")
+
+y <- hms(TH203_TH204$Time)
+TH203_TH204$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH203_TH204$Time <- as.numeric(TH203_TH204$Time)
+TH203_TH204 <- pivot_longer(TH203_TH204, cols = A01:C12, names_to = "Key", values_to = "OD600")
+TH203_TH204 <- rbind(TH203_TH204_t0, TH203_TH204)
+
+
+TH203_TH204_keys <- TH203_TH204_keys[-2]
+TH203_TH204 <- full_join(TH203_TH204, TH203_TH204_keys, by = "Key")
+TH203_TH204_2 <- TH203_TH204 %>% filter(`Strain` != "TH86")
+
+rel_growth_TH203_TH204 <- TH203_TH204 %>%
+  select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, Time) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0]))
+
+rel_growth_TH203_TH204 <- rel_growth_TH203_TH204 %>%
+  select(-OD600) %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarize_at(.vars = vars(rel_growth), .funs = c(meanRG = mean, sdRG = sd))
+
+rel_growth_TH203_TH204 <- rel_growth_TH203_TH204[-6]
+rel_growth_TH203_TH204$`IPTG (mM)` <- as.factor(rel_growth_TH203_TH204$`IPTG (mM)`)
+rel_growth_TH203_TH204$`cumate (mM)` <- as.factor(rel_growth_TH203_TH204$`cumate (mM)`)
+rel_growth_TH203_TH204$`Time` <- round(rel_growth_TH203_TH204$`Time`, digits=2)
+
+
+TH203_TH204_avgs <- TH203_TH204 %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = vars(OD600), .funs = c(meanOD = mean, sdOD = sd))
+```
+
+
+
+
+```{r}
+single_toxins <- read.csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220121_single_toxins_SBW25.csv")
+single_toxins_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220121_single_toxins_SBW25_KEYS.csv",
+  well_ids_column = "Key")
+
+Time <- 0
+t0_singles <- cbind(Time, single_toxins_keys[1:2])
+names(t0_singles)[names(t0_singles) == "0"] <- "OD600"
+single_toxins <- pivot_longer(single_toxins, cols = A01:G12, names_to = "Key", values_to = "OD600")
+
+y <- hms(single_toxins$`Time`)
+single_toxins$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+single_toxins$Time <- round(as.numeric(single_toxins$Time), digits = 2)
+
+single_toxins <- rbind(single_toxins, t0_singles)
+
+single_toxins <- full_join(single_toxins, single_toxins_keys, by = "Key")
+
+Plux <- single_toxins %>%
+  filter(is.na(`cumate (mM)`)) %>%
+  group_by(`Strain`, Time, Replicate, `IPTG (mM)`) %>%
+  mutate(rel_growth = OD600/(OD600[`C6 HSL (nM)`==0]))
+
+Plux_avgs <- Plux %>%
+  select(-`cumate (mM)`) %>%
+  group_by(Strain, `C6 HSL (nM)`, Time, `IPTG (mM)`) %>%
+  summarise_at(.vars = vars(rel_growth), .funs = c(meanRG = mean, sdRG = sd))
+
+Pcym <- single_toxins %>%
+  filter(is.na(`C6 HSL (nM)`)) %>%
+  group_by(`Strain`, Time, Replicate) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0]))
+
+Pcym_avgs <- Pcym %>%
+  select(-`C6 HSL (nM)`) %>%
+  group_by(Strain, `cumate (mM)`, Time, `IPTG (mM)`) %>%
+  summarise_at(.vars = vars(rel_growth), .funs = c(meanRG = mean, sdRG = sd))
+
+#Make X and Y variables factors to free the scales in the geom_tile plot
+# and remove white space
+
+Pcym_avgs$`cumate (mM)` <- as.factor(Pcym_avgs$`cumate (mM)`)
+Pcym_avgs$`IPTG (mM)` <- as.factor(Pcym_avgs$`IPTG (mM)`)
+
+# IPTG serves as the Y-axis, which allows me to plot these data as a geom_tile
+
+
+
+rel_growth_TH124$`cumate (mM)` <- as.factor(rel_growth_TH124$`cumate (mM)`)
+rel_growth_TH124$`IPTG` <- as.factor(rel_growth_TH124$`IPTG`)
+
+rel_growth_TH124$`Time` <- round(rel_growth_TH124$`Time`, digits=2)
+```
+
+Graph EcoRI
+
+```{r}
+rel_growth_TH203_TH204 %>%
+  filter(`Time` == 8.01) %>%
+  filter(Strain == "TH203") %>%
+  ggplot() +
+  geom_tile(aes(x=`cumate (mM)`, y=`IPTG (mM)`, fill=meanRG), color = "white", size=0.1) +
+  scale_fill_viridis_c(name = "growth relative to\nuninhibited sample") +
+  labs(x="toxin (cumate, mM)",
+       title = "TisB, no antitoxin") +
+  theme(panel.background = element_blank(),
+        strip.background = element_blank(), 
+        legend.position = "none",
+        axis.text = element_text(size = 12),
+        text = element_text(size = 12),
+        plot.title = element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 10),
+        strip.text.x = element_text(size = 14),
+        axis.text.x = element_text(size = 11),
+        legend.key.size = unit(0.7, 'cm')
+        ) 
+```
+
+```{r}
+ggsave(filename = "20220126_TisB_matrix_forPaper.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 4, height = 1.3, units = "in", device='png', dpi=300)
+```
+
+Plot single toxins on Pcym
+
+```{r}
+
+rel_growth_TH203_TH204 %>%
+  filter(`Time` == 8.01) %>%
+  ggplot() +
+  facet_wrap(~Strain, labeller = strain_names) +
+  geom_tile(aes(x=`cumate (mM)`, y = `IPTG (mM)`, fill=meanRG), color = "white", size=0.1) +
+  scale_fill_viridis_c(name = "growth relative to\nuninhibited sample") +
+  labs(x="toxin (cumate, mM)",
+       title = "Type I TA system pore forming toxins") +
+  theme(text = element_text(size = 10),
+        plot.title = element_text(color = "black", face = "bold", size = 14),
+        axis.text = element_text(size = 10), 
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = "bottom",
+        legend.key.size = unit(0.4, "cm"),
+        legend.title = element_text(size = 8)
+        )
+
+
+TH203_TH204_avgs %>%
+  ggplot(aes(x = Time, y = meanOD, color = Strain)) +
+  facet_grid(rows = vars(Strain), cols = vars(`cumate (mM)`)) +
+  geom_line(size = 1) +
+  geom_point(size = 1.5) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.4) +
+  labs(#title = "Dual induction test\n0.5 mM cuminic acid", 
+       x = 'Time (hrs)', 
+       y = expression('OD'[600]), 
+       color = "Strain") +
+  scale_x_continuous(limits = c(0,17), breaks = seq(0,17,2)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  #scale_color_discrete(name = "", limits = names(strain_names), labels = strain_names) +
+  scale_color_manual(values = c("TH86" = "gray",
+                                "TH203" = "blue",
+                                "TH204" = "purple")) +
+  theme_bw() +
+  theme(strip.background = element_rect(size=1, fill = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 13),
+        #plot.title = element_text(color = "black", face = "bold"),
+        axis.text = element_text(size = 11),
+        legend.title = element_blank())
+
+TH203_TH204_avgs$`cumate (mM)` <- as.factor(TH203_TH204_avgs$`cumate (mM)`)
+
+TH203_TH204_avgs %>%
+  filter(Strain != "TH204") %>%
+  ggplot(aes(x = Time, y = meanOD, color = `cumate (mM)`)) +
+  facet_wrap(~factor(Strain, levels = c("TH86", "TH203", "TH204"), 
+                     labels = c("regulators only", "TisB", "Gef")), nrow = 1, ncol = 3) +
+  geom_line(size = 1) +
+  geom_point(size = 1.5) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.4) +
+  labs(#title = "", 
+       x = 'Time (hrs)', 
+       y = expression('OD'[600]), 
+       color = "cumate (mM)") +
+  scale_x_continuous(limits = c(0,17), breaks = seq(0,17,2)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  scale_color_grey() +
+  #scale_color_viridis_d(option = "inferno", begin = 0, end = 0.8) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 10),
+        #plot.title = element_text(color = "black", face = "bold"),
+        axis.text = element_text(size = 9),
+        panel.background = element_blank(),
+        legend.title = element_text(size = 8),
+        legend.key.size = unit(0.4, "cm") 
+  )
+
+```
+
+```{r}
+ggsave(filename = "20220204_Pcym_poreFormers_curves_TisB.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Single_toxins", width = 4, height = 2, units = "in", device='png', dpi=300)
+```
+
+
+Combine growth curves into single data frame and find mean + sd
+
+```{r}
+# Combine growth curves
+curves_all <- rbind(TH88_2, TH99b_2)
+#curves_all <- rbind(curves_all, TH99b_2)
+curves_all <- rbind(curves_all, TH128_2)
+curves_all <- rbind(curves_all, TH128_2b)
+curves_all <- rbind(curves_all, TH126_2)
+#curves_all <- rbind(curves_all, TH100_2)
+curves_all <- rbind(curves_all, TH100_noIPTG_2 )
+#curves_all <- rbind(curves_all, TH100_noIPTG_2)
+#curves_all <- rbind(curves_all, TH131_2)
+curves_all <- rbind(curves_all, TH131_noIPTG_2)
+#curves_all <- rbind(curves_all, TH177_2)
+#curves_all <- rbind(curves_all, TH177b_2)
+#curves_all <- rbind(curves_all, TH179_2)
+#curves_all <- rbind(curves_all, TH124)
+#curves_all <- rbind(curves_all, TH203_TH204_2)
+curves_all <- rbind(curves_all, TH237_2)
+curves_all <- rbind(curves_all, TH240_2)
+
+
+# Means for all
+
+curves_all_means <- curves_all %>%
+  #select(-Key, -Replicate) %>%
+  group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
+
+```
+
+Individual growth curves
+
+```{r}
+
+graphed_curves <- curves_all_means %>%
+  filter(`IPTG (mM)` == 0 & `cumate (mM)` == 0)
+
+strain_names2 <-as_labeller(c('TH37' = "wild type",
+                  'TH86' = "regulators only",
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH124' = "EcoRI, no methylase",
+                  'TH125' = "RalR-RalA",
+                  'TH126' = "Tse2-Tsi2",
+                  'TH127' = "colicin E1-ImmE1",
+                  'TH128' = "colicin E2-ImmE2",
+                  'TH131' = "RelE-RelB",
+                  'TH106' = "ColE1-ImmE1 in E. coli",
+                  'TH107' = "ColE2-ImmE2 in E. coli",
+                  'TH108' = "RalR-RalA in E. coli",
+                  'TH109' = "Tse2-Tsi2 in E. coli",
+                  'TH177' = "colE2-Imm-ssrA[-ILV]",
+                  'TH179' = "tse2-tsi2-ssrA[-ILV]",
+                  "TH203" = "TisB",
+                  "TH204" = "Gef"))
+
+graphed_curves <- factor(graphed_curves$Strain,
+                         levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128", "TH124"))
+
+graphed_curves$Time <- as.numeric(graphed_curves$Time)
+
+graphed_curves %>%
+  filter(Strain != "TH204") %>%
+  ggplot(aes(x = Time, y = meanOD, color = Strain, group = Strain)) +
+  facet_wrap(~factor(Strain, levels = 
+                       c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128", "TH124", "TH203"), 
+                     labels = 
+                       c("regulators only", "CcdB-CcdA", "HicA-HicB", "ParE-ParD", "RelE-RelB", "Tse2-Tsi2", "colicin E2-ImmE2", "EcoRI", "TisB")), nrow = 2, ncol = 8) +
+  geom_line(size = 1) +
+  geom_point(size = 1.5) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.4) +
+  labs(title = "Growth in the absence of cumate: basal toxcity",
+       x = 'Time (hrs)', 
+       y = expression('OD'[600])) +
+  scale_x_continuous(limits = c(0,17), breaks = seq(0,17,2)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  scale_color_manual(values = c("TH86" = "gray",
+                                "TH126" = "#4BFC2E",
+                                "TH128" = "#4796F5",
+                                "TH98" = "#057C8B",
+                                "TH86" = "gray",
+                                "TH88" = "#EC5E8D",
+                                "TH99" = "#D7A3EC",
+                                "TH100" = "#E0D935",
+                                "TH131" = "#F7AB37", 
+                                "TH124" = "#30ECEC",
+                                "TH203" = "#D4BFDB"),
+                     labels = strain_names2) +  
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        text = element_text(size = 13),
+        plot.title = element_text(color = "black", face = "bold"),
+        axis.text = element_text(size = 11),
+        legend.title = element_blank(),
+        legend.position = "none")
+```
+
+Altered Immunities - basal burden curves (no inducers)
+
+```{r}
+graphed_curves_Imm <- curves_Imm_means %>%
+  filter(`IPTG (mM)` == 0 & `cumate (mM)` == 0)
+
+graphed_curves_Imm %>%
+  filter(Strain == "TH126" | Strain =="TH240" & Time < 16) %>%
+  ggplot(aes(x = Time, y = meanOD, color = Strain, group = Strain)) +
+  #facet_wrap(~`IPTG (mM)`, labeller = strain_names_imm) +
+  # facet_wrap(~factor(Strain, levels = 
+  #                      c("TH126", "TH240", "TH128", "TH237", "TH245"), 
+  #                    labels = 
+  #                      c("Tse2-Tsi2\nwild-type", "Tsi2-ssrA[AAV]", "ColE2-ImmE2\nwild-type", "ImmE2-ssrA[AAV]", "ImmE2 [D51A, YY54-55AA]")), nrow = 2, ncol = 3) +
+  geom_line(aes(linetype = Strain), size = 1.5) +
+  geom_point(aes(shape = Strain), size = 1.5) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.4) +
+  labs(title = "No inducers: Tse2-Tsi2 with degradation tag",
+       x = 'Time (hrs)', 
+       y = expression('OD'[600])) +
+  scale_x_continuous(limits = c(0,18), breaks = seq(0,18,2)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  scale_color_manual(values = c("TH126" = "#4BFC2E",
+                                "TH240" = "#46DA2D",
+                                "TH128" = "#4796F5",
+                                "TH237" = "#3B7DCB",
+                                "TH245" = "#3B7DCB"),
+                     labels = strain_names_imm) +  
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        text = element_text(size = 13),
+        plot.title = element_text(color = "black", face = "bold", size = 10),
+        axis.text = element_text(size = 11),
+        legend.title = element_blank(),
+        legend.position = "none"
+        )
+
+```
+
+
+
+
+
+
+
+Calculate growth of each strain @ each time point relative to untreated sample
+for that condition, with error.
+
+```{r}
+# Calculate relative growth for matrix 
+# (to sample without cuminic acid added for each IPTG condition)
+
+rel_growth_all <- curves_all %>%
+  select(-Key) %>%
+  group_by(`Strain`, `IPTG (mM)`, Time, Replicate) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0]))
+
+rel_growth_all <- rel_growth_all %>%
+  select(-OD600) %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarize_at(.vars = vars(rel_growth), .funs = c(meanRG = mean, sdRG = sd))
+
+rel_growth_small <- rel_growth_all[-6]
+rel_growth_small$`IPTG (mM)` <- as.factor(rel_growth_small$`IPTG (mM)`)
+rel_growth_small$`cumate (mM)` <- as.factor(rel_growth_small$`cumate (mM)`)
+rel_growth_small$`Time` <- round(rel_growth_small$`Time`, digits=2)
+                                          
+#rel_growth_small <- melt(rel_growth_small)
+#rng = range(relative_growths_6hrs$value)
+
+# Try calculating relative growth for all samples relative to the untreated sample
+# (lower left corner) only - so, not relative to the left-most sample for each row
+
+rel_growth_new <- curves_all %>%
+  select(-Key) %>%
+  group_by(`Strain`, Time, Replicate) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0 & `IPTG (mM)` ==0]))
+
+rel_growth_new <- rel_growth_new %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  summarize_at(.vars = vars(rel_growth), .funs = c(meanRG = mean, sdRG = sd))
+
+rel_growth_new <- rel_growth_new[-6]
+rel_growth_new$`IPTG (mM)` <- as.factor(rel_growth_new$`IPTG (mM)`)
+rel_growth_new$`cumate (mM)` <- as.factor(rel_growth_new$`cumate (mM)`)
+rel_growth_new$`Time` <- round(rel_growth_new$`Time`, digits=2)
+
+
+## In order to show the effect of IPTG on growth, plot JUST the first column (relative growth of IPTG+ samples
+# on sample without any IPTG)
+
+rel_growth_IPTG <- curves_all %>%
+  select(-Key, -Replicate) %>%
+  filter(`cumate (mM)` == 0) %>%
+  group_by(`Strain`, Time) %>%
+  mutate(rel_growth_IPTG = OD600/(OD600[`IPTG (mM)` ==0]))
+
+rel_growth_IPTG <- rel_growth_IPTG %>%
+  group_by(`cumate (mM)`, Strain, `IPTG (mM)`, Time) %>%
+  summarize_at(.vars = vars(rel_growth_IPTG), .funs = c(meanRG_IPTG = mean, sdRG_IPTG = sd))
+
+rel_growth_IPTG <- rel_growth_IPTG[-6]
+rel_growth_IPTG$`IPTG (mM)` <- as.factor(rel_growth_IPTG$`IPTG (mM)`)
+rel_growth_IPTG$`Time` <- round(rel_growth_IPTG$`Time`, digits=2)
+
+```
+
+Plot relative growth of IPTG samples only
+
+```{r}
+
+rel_growth_IPTG$Strain <- factor(rel_growth_IPTG$Strain,
+                         levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128"))
+
+plot_grid_IPTG <- rel_growth_IPTG %>%
+  filter(`Time` == 8.01 | `Time` == 8.17 | `Time` == 8.18) %>%
+  group_by(Strain) %>%
+  ggplot(aes(x=`cumate (mM)`, y=`IPTG (mM)`, fill=meanRG_IPTG)) +
+  geom_tile(color = "white", size=0.1) +
+  facet_wrap(~Strain, labeller = strain_names, ncol = 6) +
+  scale_fill_viridis_c(name = "growth relative to\nsample without IPTG") +
+  labs(x="", y="antitoxin (IPTG, mM)") +
+  theme(text = element_text(size = 9),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 9), 
+        panel.background = element_blank(),
+        strip.text = element_text(face = "bold", size = 9),
+        strip.background = element_blank(), 
+        legend.position = "right",
+        legend.title = element_text(size = 8),
+        legend.key.size = unit(0.4, 'cm'),
+        legend.box = "vertical",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        strip.text.x = element_text(angle = 90))
+
+
+```
+
+```{r}
+ggsave(filename = "20220122_all_matrices_IPTGanalysis.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 3.7, height = 3.8, units = "in", device='png', dpi=300)
+```
+
+
+Use Growthcurver to find growth rate/generation time for each strain under ininduced conditions (wells A1 & A2)
+
+```{r}
+library(growthcurver)
+library(kableExtra)
+
+TH88_t0 <- pivot_wider(TH88_t0, names_from = "Key", values_from = "OD600")
+TH88_3 <- TH88
+y <- hms(TH88_3$Time)
+TH88_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH88_3 <- rbind(TH88_t0, TH88_3)
+TH88_3$Time <- round(as.numeric(TH88_3$Time), digits = 2)
+
+TH88$Blank <- 0.043
+
+y <- hms(TH88$Time)
+TH88$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH88$Time <- round(as.numeric(TH88$Time), digits = 2)
+
+TH88_growth_out <- SummarizeGrowthByPlate(TH88, bg_correct = "blank")
+
+TH88_growth_all <- "/Users/halvorsen1/Documents/R_graphs/Growthcurver//TH88_growth_all.txt"
+write.table(TH88_growth_out, file = TH88_growth_all, 
+            quote = FALSE, sep = "\t", row.names = FALSE)
+
+TH88_1 <- SummarizeGrowth(TH88_3$Time, TH88_3$A01)
+TH88_2 <- SummarizeGrowth(TH88_3$Time, TH88_3$A02)
+
+png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH88_matrix_undinduced_gcFit.png",
+    width = 520, height = 480, units = "px")
+plot(TH88_1)
+dev.off()
+
+TH88_rate <- mean(TH88_1$vals$r, TH88_2$vals$r)
+
+
+TH99_t0 <- pivot_wider(TH99_t0, names_from = "Key", values_from = "OD600")
+TH99_3 <- TH99
+y <- hms(TH99_3$Time)
+TH99_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH99_3 <- rbind(TH99_t0, TH99_3)
+TH99_3$Time <- round(as.numeric(TH99_3$Time), digits = 2)
+
+TH99_1 <- SummarizeGrowth(TH99_3$Time, TH99_3$A01)
+TH99_2 <- SummarizeGrowth(TH99_3$Time, TH99_3$A02)
+
+png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH99_matrix_undinduced_gcFit.png",
+    width = 520, height = 480, units = "px")
+plot(TH99_1)
+dev.off()
+
+TH99_rate <- mean(TH99_1$vals$r, TH99_2$vals$r)
+
+
+TH100_t0 <- pivot_wider(TH100_t0, names_from = "Key", values_from = "OD600")
+TH100_3 <- TH100
+y <- hms(TH100_3$Time)
+TH100_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH100_3 <- rbind(TH100_t0, TH100_3)
+TH100_3$Time <- round(as.numeric(TH100_3$Time), digits = 2)
+
+TH100_1 <- SummarizeGrowth(TH100_3$Time, TH100_3$A01)
+TH100_2 <- SummarizeGrowth(TH100_3$Time, TH100_3$A02)
+
+png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH100_matrix_undinduced_gcFit.png",
+    width = 520, height = 480, units = "px")
+plot(TH100_1)
+dev.off()
+
+TH100_rate <- mean(TH100_1$vals$r, TH100_2$vals$r)
+
+
+
+TH131_t0 <- pivot_wider(TH131_t0, names_from = "Key", values_from = "OD600")
+TH131_3 <- TH131
+y <- hms(TH131_3$Time)
+TH131_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH131_3 <- rbind(TH131_t0, TH131_3)
+TH131_3$Time <- round(as.numeric(TH131_3$Time), digits = 2)
+
+TH131_1 <- SummarizeGrowth(TH131_3$Time, TH131_3$A01)
+TH131_2 <- SummarizeGrowth(TH131_3$Time, TH131_3$A02)
+
+png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH131_matrix_undinduced_gcFit.png",
+    width = 520, height = 480, units = "px")
+plot(TH131_1)
+dev.off()
+
+TH131_rate <- mean(TH131_1$vals$r, TH131_2$vals$r)
+
+
+
+TH126_t0 <- pivot_wider(TH126_t0, names_from = "Key", values_from = "OD600")
+TH126_3 <- TH126
+y <- hms(TH126_3$Time)
+TH126_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH126_3 <- rbind(TH126_t0, TH126_3)
+TH126_3$Time <- round(as.numeric(TH126_3$Time), digits = 2)
+
+TH126_1 <- SummarizeGrowth(TH126_3$Time, TH126_3$A01)
+TH126_2 <- SummarizeGrowth(TH126_3$Time, TH126_3$A02)
+
+png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH126_matrix_undinduced_gcFit.png",
+    width = 520, height = 480, units = "px")
+plot(TH126_1)
+dev.off()
+
+TH126_rate <- mean(TH126_1$vals$r, TH126_2$vals$r)
+
+
+
+TH128_t0 <- pivot_wider(TH128_t0, names_from = "Key", values_from = "OD600")
+TH128_3 <- TH128
+y <- hms(TH128_3$Time)
+TH128_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+TH128_3 <- rbind(TH128_t0, TH128_3)
+TH128_3$Time <- round(as.numeric(TH128_3$Time), digits = 2)
+
+TH128_1 <- SummarizeGrowth(TH128_3$Time, TH128_3$A01)
+TH128_2 <- SummarizeGrowth(TH128_3$Time, TH128_3$A02)
+
+png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH128_matrix_undinduced_gcFit.png",
+    width = 520, height = 480, units = "px")
+plot(TH128_1)
+dev.off()
+
+TH128_rate <- mean(TH128_1$vals$r, TH128_2$vals$r)
+
+
+Strain <- c("TH88", "TH99", "TH100", "TH131", "TH126", "TH128")
+rate <- c(TH88_rate, TH99_rate, TH100_rate, TH131_rate, TH126_rate, TH128_rate)
+`gen_time` <- c(TH88_1$vals$t_gen, TH99_1$vals$t_gen, TH100_1$vals$t_gen, TH131_1$vals$t_gen, TH126_1$vals$t_gen, TH128_1$vals$t_gen)
+
+growth_rates <- data.frame(Strains, rate, `gen_time`)
+growth_rates$rate <- round(growth_rates$rate, digits = 2)
+growth_rates$gen_time <- round(growth_rates$gen_time, digits = 2)
+growth_rates <- growth_rates %>%
+  mutate('100 generations (hr)' = round(`t_gen` * 100, digits = 2))
+write.table(growth_rates, file = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/killswitch_growthRates.txt")
+
+growth_table <- growth_rates %>%
+  kbl(caption = "Kill switch strains: growth rate and generation times") %>%
+  kable_classic(full_width = F, html_font = "Arial") %>%
+  save_kable(file = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/growth_rates.png", self_contained = T, zoom = 4) 
+
+```
+
+
+```{r}
+# Plot relative growth on faceted grid
+
+# Re-order strains to keep color mapping consistent between graphs
+
+rel_growth_combined <- rbind(rel_growth_small, rel_growth_Imm_small)
+
+rel_growth_combined$Strain <- factor(rel_growth_combined$Strain,
+                         levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH240", "TH128", "TH237"))
+
+strain_names <- as_labeller(
+                c('TH37' = "wild type",
+                  'TH86' = "regulators only",
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH124' = "EcoRI, no methylase",
+                  'TH125' = "RalR-RalA",
+                  'TH126' = "Tse2-Tsi2",
+                  'TH127' = "colicin E1-ImmE1",
+                  'TH128' = "ColE2-ImmE2",
+                  'TH131' = "RelE-RelB",
+                  'TH106' = "ColE1-ImmE1 in E. coli",
+                  'TH107' = "ColE2-ImmE2 in E. coli",
+                  'TH108' = "RalR-RalA in E. coli",
+                  'TH109' = "Tse2-Tsi2 in E. coli",
+                  'TH177' = "ColE2-Imm-ssrA[-ILV]",
+                  'TH179' = "tse2-tsi2-ssrA[-ILV]",
+                  "TH203" = 'TisB, no antitoxin',
+                  "TH240" = 'Tse2-Tsi2[SsrA]',
+                  "TH237" = "ColE2-ImmE2[SsrA]"))
+
+rel_growth_Imm_small$Strain <- factor(rel_growth_Imm_small$Strain, 
+                                      levels = c("TH240",
+                                                 "TH237",
+                                                 "TH126",
+                                                 "TH128",
+                                                 "TH253",
+                                                 "TH249"))
+
+rel_growth_combined %>% 
+  #filter(Strain != "TH203" & Strain  != "TH124" & Strain != "TH126" & Strain != "TH128" & Strain != "TH240" & Strain != "TH237") %>%
+  filter(Strain == "TH240" | Strain == "TH237" | Strain == "TH126" | Strain  == "TH128") %>%
+  #filter(Strain == "TH204" | Strain == "TH124") %>%
+  filter(`Time` == 8.01 | `Time` == 8.17 | `Time` == 8.18) %>%
+  group_by(Strain) %>%
+  ggplot(aes(x=`cumate (mM)`, y=`IPTG (mM)`, fill=meanRG)) +
+  geom_tile(color = "white", size=0.1) +
+  facet_wrap(~Strain, labeller = strain_names, scales = "free_x", ncol = 4, nrow = 2) +
+  scale_fill_viridis_c(name = "growth relative to\nuninhibited sample", guide = guide_colorbar(reverse = TRUE)) +
+  labs(x="toxin (cumate, mM)", y="antitoxin (IPTG, mM)") +
+  theme(panel.background = element_blank(),
+        strip.background = element_blank(), 
+        legend.position = "top",
+        axis.text = element_text(size = 12),
+        text = element_text(size = 12),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 10),
+        strip.text.x = element_text(size = 14),
+        axis.text.x = element_text(size = 11),
+        legend.key.size = unit(0.7, 'cm')
+        ) 
+  
+```
+
+```{r}
+ggsave(filename = "20220714_ColTsematrices.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 9, height = 3.5, units = "in", device='png', dpi=300)
+```
+Immunity matrices: 4x3
+TA matrices: 9x3.5
+All matrices: 13x3.5
+2 rows: 11x6, or 11x7.2
+```{r}
+# Plot relative growth on faceted grid from NEW DATA SET with values relative to the cumate == 0 AND IPTG == 0 sample for each strain
+
+# Re-order strains to keep color mapping consistent between graphs
+
+rel_growth_new$Strain <- factor(rel_growth_new$Strain,
+                         levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128"))
+
+strain_names <- as_labeller(
+                c('TH37' = "wild type",
+                  'TH86' = "regulators only",
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH124' = "EcoRI, no methylase",
+                  'TH125' = "RalR-RalA",
+                  'TH126' = "Tse2-Tsi2",
+                  'TH127' = "colicin E1-ImmE1",
+                  'TH128' = "colicin E2-ImmE2",
+                  'TH131' = "RelE-RelB",
+                  'TH106' = "ColE1-ImmE1 in E. coli",
+                  'TH107' = "ColE2-ImmE2 in E. coli",
+                  'TH108' = "RalR-RalA in E. coli",
+                  'TH109' = "Tse2-Tsi2 in E. coli",
+                  'TH177' = "colE2-Imm-ssrA[-ILV]",
+                  'TH179' = "tse2-tsi2-ssrA[-ILV]",
+                  'TH203' = "TisB, no antitoxin",
+                  'TH204' = "gef, no antitoxin"))
+
+plot_grid2 <- rel_growth_new %>%
+  filter(`Time` == 8.01 | `Time` == 8.17 | `Time` == 8.18) %>%
+  group_by(Strain) %>%
+  ggplot(aes(x=`cumate (mM)`, y=`IPTG (mM)`, fill=meanRG)) +
+  geom_tile(color = "white", size=0.1) +
+  facet_wrap(~Strain, labeller = strain_names, scales = "free_x") +
+  #scale_fill_viridis_c(name = "growth relative to\nuninhibited sample") +
+  scale_color_viridis_c(rescaler = function(x, to = c(0, 2), from = NULL) {
+    ifelse(x>2, 
+           scales::rescale(x,
+                           to = to,
+                           from = c(min(x, na.rm = TRUE), 2)),
+           2)}) +
+  labs(x="toxin (cumate, mM)", y="antitoxin (IPTG, mM)") +
+  theme(text = element_text(size = 9),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 6.8), 
+        panel.background = element_blank(),
+        strip.text = element_text(face = "bold", size = 9),
+        strip.background = element_blank(), 
+        legend.position = "bottom",
+        legend.title = element_text(size = 8))
+
+  
+```
+
+
+
+```{r}
+
+# Make matrix with growth curves + keep same heatmap aesthetic
+
+rel_growth_all_2 <- curves_all %>%
+  group_by(`Strain`, `IPTG (mM)`, Time) %>%
+  mutate(rel_growth = OD600/(OD600[`cumate (mM)`==0]))
+# 
+# rel_growth_all$`Time` <- round(rel_growth_all$`Time`, digits=2)
+# 
+# rel_growth_all$Strain <- factor(rel_growth_all$Strain,
+#                          levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128"))
+curves_all$Strain <- factor(curves_all$Strain,
+                         levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128", "TH177", "TH179"))
+
+replicate1 <- filter(curves_all, Replicate == 1)
+replicate2 <- filter(curves_all, Replicate == 2)
+replicate3 <- filter(curves_all, Replicate == 3)
+replicate4 <- filter(curves_all, Replicate == 4)
+
+replicate1$`Time` <- round(replicate1$`Time`, digits=2)
+replicate2$`Time` <- round(replicate2$`Time`, digits=2)
+replicate3$`Time` <- round(replicate3$`Time`, digits=2)
+replicate4$`Time` <- round(replicate4$`Time`, digits=2)
+
+separated_curves <- rbind(replicate1, replicate2)
+separated_curves <- rbind(separated_curves, replicate3)
+separated_curves <- rbind(separated_curves, replicate4)
+
+rel_growth_all_2$`Time` <- round(rel_growth_all_2$`Time`, digits=2)
+
+
+data_summary <- full_join(separated_curves,rel_growth_all_2)
+
+data_summary <- data_summary %>%
+  select(-Key) %>%
+  group_by(Strain, `IPTG (mM)`, `cumate (mM)`, Time) %>%
+  mutate(meanRG = mean(rel_growth))
+
+
+data_summary$`IPTG (mM)` <- factor(data_summary$`IPTG (mM)`,
+                                   levels = c("1", "0.5", "0.3", "0.2", "0.1", "0.07", "0.02", "0"))
+
+data_summary %>%
+  filter(`Strain` == 'TH126') %>%
+  group_by(Replicate) %>%
+  ggplot(aes(group = Replicate, color = meanRG)) +
+  #geom_tile(color = "white", size = 0.1, aes(x=`cumate (mM)`, y=`IPTG (mM)`, fill=meanRG)) +
+  geom_line(aes(x = `Time`, y = `OD600`), size = 0.8) +
+  #scale_color_viridis_c(name = "growth relative to\nuninhibited sample", limits = c(0, 1), oob = scales::squish) +
+  scale_color_viridis_c(rescaler = function(x, to = c(0, 1), from = NULL) {
+    ifelse(x<1, 
+           scales::rescale(x,
+                           to = to,
+                           from = c(min(x, na.rm = TRUE), 1)),
+           1)}) +
+  scale_y_continuous(name = expression('OD'[600]), 
+                     sec.axis = dup_axis(name = "antitoxin (IPTG, mM)", 
+                                                         labels = NULL, 
+                                                         breaks = NULL)) +
+  scale_x_continuous(name = "Time (hrs)", 
+                     sec.axis = dup_axis(name = "toxin (cumate, mM)", 
+                                                        labels = NULL, 
+                                                        breaks = NULL)) +
+  facet_grid(rows = vars(`IPTG (mM)`), cols = vars(`cumate (mM)`), scales = "free_x") +
+  labs(color = "growth relative to\nuninhibited sample\n(per row)",
+       title = "Tse2-Tsi2") +
+  theme(text = element_text(size = 12),
+        plot.title = element_text(color = "black", face = "bold", size = 14),
+        axis.text = element_text(size = 8), 
+        strip.background = element_rect(size=1, fill = "white"),
+        legend.key.size = unit(0.4, "cm"),
+        legend.text = element_text(size = 7),
+        legend.position = "bottom",
+        legend.title = element_text(size = 9))
+
+
+```
+
+
+```{r}
+ggsave(filename = "20211123_matrix&Curves_TH126_noIPTG_2Replicates.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 6, height = 6.5, units = "in", device='png', dpi=300)
+```
+
+
+
+```{r}
+# Plot as growth curves
+
+# Re-order for color-mapping consistency between graphs
+
+curves_all_means$Strain <- factor(curves_all_means$Strain,
+                         levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128"))
+
+strain_names <- c('TH86' = "regulators only",
+                  'TH88' = "CcdB/CcdA",
+                  'TH99' = "HicA/HicB",
+                  'TH100' = "ParE/ParD",
+                  'TH126' = "Tse2/Tsi2",
+                  'TH128' = "Colicin E2/ImmE2",
+                  'TH131' = "RelE/RelB")
+
+curves_all_means %>% ggplot(aes(x = Time, y = meanOD, color = Strain, group = Strain)) +
+  facet_grid(rows = vars(`IPTG (mM)`), cols = vars(`cumate (mM)`)) +
+  geom_line() +
+  geom_point(size = 0.25) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.2) +
+  labs(x = 'Time (hrs)', 
+       y = expression('OD'[600]), 
+       color = "Strain:") +
+  scale_color_brewer(palette = "Set2", limits = names(strain_names), labels = strain_names) + 
+  scale_x_continuous(limits = c(0,16), breaks = seq(0,16,4)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  #scale_color_discrete(name = "", limits = names(strain_names), labels = strain_names) +
+  #scale_color_discrete(name = "Strain:", limits = names(strain_names), labels = strain_names) +
+  theme_bw() +
+  theme(strip.background = element_rect(size=1, fill = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 12),
+        plot.title = element_text(color = "black", face = "bold"),
+        axis.text = element_text(size = 5), 
+        legend.position = "bottom")
+```
+
+```{r}
+ggsave(filename = "20211115_matrix_growthCurves_TH88_TH99repeat_TH128_TH100repeat_TH126", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens", width = 7, height = 6.5, units = "in", device='png', dpi=300)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
