@@ -1,0 +1,230 @@
+---
+title: "20220708_TH87_MinimalMedia_FoldChanges"
+author: "Tiffany Halvorsen"
+date: '2022-07-11'
+output: pdf_document
+---
+
+
+```{r, include = FALSE}
+library(ggplot2)
+library(dplyr)
+library(plater)
+library(tidyverse)
+library(lubridate) #hms function
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+TH87_KEYS <- read_plate("/Users/halvorsen1/Documents/RStudio/csv_files/20220708_TH87_MinimalMedia _foldChanges_KEYS.csv", well_ids_column = "Key")
+
+TH87_OD <- pivot_longer(read_csv("/Users/halvorsen1/Documents/RStudio/csv_files/20220708_TH87_MinimalMedia _foldChanges_OD.csv"),
+                                 cols = A01:H12,
+                                 names_to = "Key",
+                                 values_to = "OD600"
+                                 )
+
+TH87_GFP <- pivot_longer(read_csv("/Users/halvorsen1/Documents/RStudio/csv_files/20220708_TH87_MinimalMedia _foldChanges_GFP.csv"),
+                         cols = A01:H12,
+                         names_to = "Key",
+                         values_to = "GFP"
+                         )
+
+TH87_mRuby2 <- pivot_longer(read_csv("/Users/halvorsen1/Documents/RStudio/csv_files/20220708_TH87_MinimalMedia _foldChanges_mRuby2.csv"),
+                            cols = A01:H12,
+                            names_to = "Key",
+                            values_to = "mRuby2"
+                            )
+
+#Combine fluorescence with OD600
+TH87_GFP_OD <- cbind(TH87_OD, TH87_GFP[3])
+TH87_mRuby2_OD <- cbind(TH87_OD, TH87_mRuby2[3])
+
+#Reformat time, plus adjust for time plate was in benchtop shaker prior to overnight growth in reader
+y <- hms(TH87_GFP_OD$`Time`)
+TH87_GFP_OD$`Time` <- round(hour(y) + minute(y) / 60 + second(y) / 360, digits = 2) + 3.5
+y <- hms(TH87_mRuby2_OD$`Time`)
+TH87_mRuby2_OD$`Time` <- round(hour(y) + minute(y) / 60 + second(y) / 360, digits = 2) + 3.5
+
+#Add keys
+TH87_GFP_OD <- full_join(TH87_GFP_OD, TH87_KEYS)
+TH87_mRuby2_OD <- full_join(TH87_mRuby2_OD, TH87_KEYS)
+
+#Calculate fluorescence relative to OD
+TH87_GFP_OD <- TH87_GFP_OD %>%
+  filter(Inducer == 'IPTG') %>%
+  mutate('GFP/OD' = GFP/OD600)
+TH87_mRuby2_OD <- TH87_mRuby2_OD %>%
+  filter(Inducer == "cumate") %>%
+  mutate('mRuby2/OD' = mRuby2/OD600)
+
+# Pick one time point for comparison
+TH87_GFP_OD
+```
+
+
+
+```{r, echo=FALSE}
+
+TH87_GFP_OD$Media <- factor(TH87_GFP_OD$Media,
+                            levels = c("LB",
+                                       "Succinate",
+                                       "Proline",
+                                       "Glucose"))
+
+p1 <- ggplot() +
+  geom_point(data = TH87_GFP_OD, aes(x = `Time`, y = `GFP/OD`), color = "darkgreen") + 
+  facet_grid(Media ~ Concentration)
+
+
+```
+# GFPmut3b fluorescence over time as a function of media composition and inducer level
+```{r fig.asp = 0.7, fig.width = 6, echo = FALSE}
+p1
+```
+<br>
+<br>
+<br>
+<br>
+
+```{r, echo=FALSE}
+TH87_mRuby2_OD$Media <- factor(TH87_mRuby2_OD$Media,
+                            levels = c("LB",
+                                       "Succinate",
+                                       "Proline",
+                                       "Glucose"))
+p2 <- ggplot() +
+  geom_point(data = TH87_mRuby2_OD, aes(x = `Time`, y = `mRuby2/OD`), color = "darkred") + 
+  facet_grid(Media ~ Concentration)
+```
+# mRuby2 fluorescence over time as a function of media composition and inducer level
+```{r fig.asp = 0.7, fig.width = 6, echo = FALSE}
+p2
+```
+
+\newpage
+
+```{r, include=FALSE}
+TH87_GFP_OD$Media <- factor(TH87_GFP_OD$Media,
+                            levels = c("LB",
+                                       "Succinate",
+                                       "Proline",
+                                       "Glucose"))
+
+p3 <- TH87_GFP_OD %>%
+  filter(Time == 15.53) %>%
+  ggplot() +
+  geom_point(aes(x = `Concentration`, y = `GFP/OD`), color = 'darkgreen') + 
+  facet_wrap(~Media, ncol = 4, nrow = 1) +  
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(aes(x=Concentration, y=`GFP/OD`), method = 'loess', span = 1.5, se = FALSE, color = 'green') +
+  theme(
+    axis.text.x = element_text(size = 6)
+  )
+```
+# Fold change of Ptac at 15.5 hrs post-inoculation
+```{r fig.asp = 0.4, fig.width = 6, echo = FALSE}
+p3
+```
+
+
+
+
+```{r, include=FALSE}
+TH87_mRuby2_OD$Media <- factor(TH87_mRuby2_OD$Media,
+                            levels = c("LB",
+                                       "Succinate",
+                                       "Proline",
+                                       "Glucose"))
+
+p4 <- TH87_mRuby2_OD %>%
+  filter(Time == 15.53) %>%
+  ggplot() +
+  geom_point(aes(x = `Concentration`, y = `mRuby2/OD`), color = 'darkred') + 
+  facet_wrap(~Media, ncol = 4, nrow = 1) +  
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(aes(x=Concentration, y=`mRuby2/OD`), method = 'loess', span = 1.5, se = FALSE, color = 'red') +
+    theme(
+    axis.text.x = element_text(size = 6)
+  )
+```
+# Fold change of Pcym at 15.5 hrs post-inoculation
+```{r fig.asp = 0.4, fig.width = 6, echo = FALSE}
+p4
+```
+
+
+\newpage
+
+```{r include = FALSE}
+
+TH87_GFP_OD_means <- TH87_GFP_OD %>%
+  group_by(Media, Time) %>%
+  summarise_at(.vars = vars(`OD600`), .funs = c(meanOD = mean, sdOD =sd))
+
+TH87_GFP_OD_means$Media <- factor(TH87_GFP_OD_means$Media, 
+                                  levels = c("LB",
+                                             "Succinate",
+                                             "Proline",
+                                             "Glucose"))
+p5 <- TH87_GFP_OD_means %>%
+  ggplot() +
+  geom_point(aes(x = `Time`, y = `meanOD`), color = 'darkgreen') + 
+  geom_errorbar(aes(x = `Time`, y = `meanOD`, ymin = meanOD-sdOD, ymax = meanOD+sdOD)) +
+  facet_wrap(~Media, ncol = 4, nrow = 1) +  
+  theme(
+    axis.text.x = element_text(size = 10)
+  )
+
+```
+\newpage
+
+
+# Growth of SBW25 reporter strain in minimal media in plate reader (IPTG samples)
+* Both promoters are less active in proline, which is due to decreased growth (never entered log phase).
+* In contrast, the minimal-succinate samples are in log phase at 15 hrs, and there is different activity from either promoter.
+  + 15 hrs also mimics overnight growth, as in the escape mutant selections/survival raito analyses. 
+  + Although the minimal-glucose samples also have different promoter activities (less output in glucose from Ptac compared to in LB), these samples also have a much higher growth rate than those growing in succinate. So, both glucose and succinate exhibit decreased sensitivity to IPTG induction yet very different growth rates. One interpretation of the EcoRI-RIM data, then, is that a slower growth rate combined with decreased Ptac expression increases Pcym-EcoRI toxicity in minimal-succinate (less opportunity for methylation + less repliation to produce new WT copies to mediate recombination repair).
+      - Could also be entirely metabolic burden, but I am surprised decreased survival doesn't occur in proline (unless all are escapes..)
+      - For other toxins, the slight increase in survival ratio likely represents stronger selection against circuit function either because Pcym >> Ptac or increased metabolic burden selects against function (as we stated previously).
+      
+
+```{r fig.asp = 0.3, fig.width = 6, echo = FALSE}
+p5
+```
+
+
+```{r include = FALSE}
+
+TH87_mRuby2_OD_means <- TH87_mRuby2_OD %>%
+  group_by(Media, Time) %>%
+  summarise_at(.vars = vars(`OD600`), .funs = c(meanOD = mean, sdOD =sd))
+
+TH87_mRuby2_OD_means$Media <- factor(TH87_mRuby2_OD_means$Media, 
+                                  levels = c("LB",
+                                             "Succinate",
+                                             "Proline",
+                                             "Glucose"))
+p6 <- TH87_mRuby2_OD_means %>%
+  ggplot() +
+  geom_point(aes(x = `Time`, y = `meanOD`), color = 'darkred') + 
+  geom_errorbar(aes(x = `Time`, y = `meanOD`, ymin = meanOD-sdOD, ymax = meanOD+sdOD)) +
+  facet_wrap(~Media, ncol = 4, nrow = 1) +  
+  theme(
+    axis.text.x = element_text(size = 10)
+  )
+
+```
+
+# Growth of SBW25 reporter strain in minimal media in plate reader (cumate samples)
++ Same decreased growth occurs for both inducers, regardless of concentration.
+
+```{r fig.asp = 0.3, fig.width = 6, echo = FALSE}
+p6
+```
+

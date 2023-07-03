@@ -1,0 +1,91 @@
+---
+title: "20220823_codon_usage_for_reviews"
+author: "Tiffany Halvorsen"
+date: '2022-08-23'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(knitr)
+library(ggpubr) #R squared
+library(NatParksPalettes)
+```
+
+### Codon analysis completed at http://www.cbdb.info/ncbi?external=True
+### NCBI refseq ID obtained for MG1655, SBW25, and putida KT2440
+### Data exported as .csv file for each strain
+```{r, echo = FALSE}
+SBW25_codons <- read.csv(file = "/Users/halvorsen1/SFA_killswitches/data/codon_usage/SBW25_codon_usage.csv")
+names(SBW25_codons) <- c('codon', 'RSCU_SBW25', 'NRSCU_SBW25', 'HEG_FB_SBW25')
+
+
+MG1655_codons <- read.csv(file = "/Users/halvorsen1/SFA_killswitches/data/codon_usage/MG1655_codon_usage.csv")
+names(MG1655_codons) <- c('codon', 'RSCU_MG1655', 'NRSCU_MG1655', 'HEG_FB_MG1655')
+
+KT2440_codons <- read.csv(file = "/Users/halvorsen1/SFA_killswitches/data/codon_usage/KT2440_codon_usage.csv")
+names(KT2440_codons) <- c('codon', 'RSCU_KT2440', 'NRSCU_KT2440', 'HEG_FB_KT2440')
+
+
+codons_cor <- full_join(SBW25_codons, MG1655_codons, by = "codon")
+codons_cor <- full_join(codons_cor, KT2440_codons, by = "codon")
+```
+
+
+### Plotting correlations between codon usage of KT2440 & either SBW25 or MG1655 to justify using KT2440 optimized genes
+
+```{r, echo = FALSE}
+ggplot(data = codons_cor, mapping = aes(x = `RSCU_MG1655`, y = `RSCU_KT2440`)) +
+  geom_point(aes(color = codon)) +
+  geom_smooth(method = "lm", se=FALSE) +
+  stat_regline_equation(label.y = 5, aes(label = ..eq.label..)) + 
+  stat_regline_equation(label.y = 4.6, aes(label = ..rr.label..))
+
+```
+
+
+```{r, echo=FALSE}
+ggplot(data = codons_cor, mapping = aes(y = `RSCU_SBW25`, x = `RSCU_KT2440`)) +
+  geom_point(aes(color = codon), size = 2) +
+  scale_colour_viridis_d() +
+  geom_smooth(method = "lm", se=FALSE, color = 'black', size = 0.5) +
+  stat_regline_equation(label.y = 5, size = 5, aes(label = ..eq.label..)) + 
+  stat_regline_equation(label.y = 4.6, size = 5, aes(label = ..rr.label..)) +
+  theme(
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(0.5, 'cm')
+  )
+```
+```{r, include = FALSE}
+ggsave(filename = "20220607_Codon_usage_KT2440_SBW25.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 7.5, height = 5, units = "in", device='png', dpi=300)
+```
+
+```{r, echo=FALSE}
+ggplot(data = codons_cor, mapping = aes(y = `RSCU_SBW25`, x = `RSCU_MG1655`)) +
+  geom_point(aes(color = codon)) +
+  #scale_color_manual(values=natparks.pals(type = "continuous", "BryceCanyon", n=64)) +
+  scale_colour_viridis_d() +
+  geom_smooth(method = "lm", se=FALSE, color = 'black', size = 0.5) +
+  stat_regline_equation(label.y = 5, size = 5, aes(label = ..eq.label..)) + 
+  stat_regline_equation(label.y = 4.6, size = 5, aes(label = ..rr.label..)) +
+  theme(
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(0.5, 'cm')
+  )
+```
+
+
+```{r, include = FALSE}
+ggsave(filename = "20220607_Codon_usage_MG1655_SBW25.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 7.5, height = 5, units = "in", device='png', dpi=300)
+```

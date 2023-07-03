@@ -1,16 +1,9 @@
 ---
-title: "Combining all matrices"
-output: html_notebook
+title: "Induction matrices: co-induction experiment to test antitoxin protection and toxin potency from Ptac and Pcym promoters"
+output: pdf_document
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-
-Import individual matrices from different days into their own dataframes:
-
-```{r}
+```{r include = FALSE}
 library(ggplot2)
 library(dplyr)
 library(plater)
@@ -19,14 +12,14 @@ library(lubridate) #hms function
 library(reshape2)
 ```
 
-```{r}
+Import individual matrices from different days into their own dataframes:
 
+```{r echo=FALSE}
 #Process each matrix individually as growth curves with mean + sd
-
 TH88 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211026_TH88_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211026_TH88_matrix.csv")
 TH88_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211026_TH88_matrix_KEYS_&firstRead_2.csv",
+  "~/SFA_killswitches/data/matrices/20211026_TH88_matrix_KEYS_&firstRead_2.csv",
   well_ids_column = "Key")
 
 TH88_t0 <- TH88_keys[1:2] %>%
@@ -51,9 +44,9 @@ TH88_2 <- full_join(TH88_2, TH88_keys, by = "Key")
 
 
 TH99 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211028_TH99_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211028_TH99_matrix.csv")
 TH99_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211028_TH99_matrix_KEYS_&firstRead_2.csv",
+  "~/SFA_killswitches/data/matrices/20211028_TH99_matrix_KEYS_&firstRead_2.csv",
   well_ids_column = "Key")
 
 TH99_t0 <- TH99_keys[1:2] %>%
@@ -86,9 +79,9 @@ means_TH99_all <- TH99_2 %>%
 
 
 TH128 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211027_TH128_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211027_TH128_matrix.csv")
 TH128_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211027_TH128_matrix_KEYS_&firstRead_2.csv",
+  "~/SFA_killswitches/data/matrices/20211027_TH128_matrix_KEYS_&firstRead_2.csv",
   well_ids_column = "Key")
 
 TH128_t0 <- TH128_keys[1:2] %>%
@@ -117,9 +110,9 @@ means_TH128_all <- TH128_2 %>%
 
 
 TH128b <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220114_TH128repeat_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220114_TH128repeat_matrix.csv")
 TH128_keysb <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220114_TH128repeat_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20220114_TH128repeat_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH128_t0b <- TH128_keysb[1:2] %>%
@@ -149,9 +142,9 @@ means_TH128_allb <- TH128_2b %>%
 
 
 TH126 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211103_TH126_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211103_TH126_matrix.csv")
 TH126_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211103_TH126_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20211103_TH126_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH126_t0 <- TH126_keys[1:2] %>%
@@ -180,9 +173,9 @@ means_TH126_all <- TH126_2 %>%
 
 
 TH100 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211104_TH100_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211104_TH100_matrix.csv")
 TH100_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211104_TH100_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20211104_TH100_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH100_t0 <- TH100_keys[1:2] %>%
@@ -212,9 +205,9 @@ means_TH100_all <- TH100_2 %>%
 
 
 TH131 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211109_TH131_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211109_TH131_matrix.csv")
 TH131_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211109_TH131_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20211109_TH131_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH131_t0 <- TH131_keys[1:2] %>%
@@ -238,9 +231,9 @@ TH131_2 <- full_join(TH131_2, TH131_keys, by = "Key")
 
 
 TH99b <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211110_TH99repeat_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211110_TH99repeat_matrix.csv")
 TH99b_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211110_TH99repeat_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20211110_TH99repeat_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH99b_t0 <- TH99b_keys[1:2] %>%
@@ -265,9 +258,9 @@ TH99b_2 <- full_join(TH99b_2, TH99b_keys, by = "Key")
 
 
 TH100b <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211115_TH100repeat_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20211115_TH100repeat_matrix.csv")
 TH100b_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211115_TH100repeat_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20211115_TH100repeat_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH100b_t0 <- TH100b_keys[1:2] %>%
@@ -287,16 +280,13 @@ TH100b_2$Time <- as.numeric(TH100b_2$Time)
 TH100b_2 <- rbind(TH100b_t0, TH100b_2)
 
 TH100b_2 <- full_join(TH100b_2, TH100b_keys, by = "Key")
-```
 
 
 
-
-```{r}
 TH177 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220105_TH177_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220105_TH177_matrix.csv")
 TH177_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220105_TH177_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20220105_TH177_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH177_t0 <- TH177_keys[1:2] %>%
@@ -327,9 +317,9 @@ means_TH177_all <- TH177_2 %>%
 
 
 TH177b <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220107_TH177repeat_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220107_TH177repeat_matrix.csv")
 TH177b_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220107_TH177repeat_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20220107_TH177repeat_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH177b_t0 <- TH177b_keys[1:2] %>%
@@ -352,12 +342,10 @@ TH177b_2 <- full_join(TH177b_2, TH177b_keys, by = "Key")
 
 
 
-
-
 TH179 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220111_TH179_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220111_TH179_matrix.csv")
 TH179_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220111_TH179_matrix_KEYS_&firstRead.csv",
+  "~/SFA_killswitches/data/matrices/20220111_TH179_matrix_KEYS_&firstRead.csv",
   well_ids_column = "Key")
 
 TH179_t0 <- TH179_keys[1:2] %>%
@@ -385,11 +373,11 @@ means_TH179_all <- TH179_2 %>%
 
 ```
 
-```{r}
+```{r echo=FALSE}
 TH131_noIPTG <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220119_TH131repeat(woIPTG)_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220119_TH131repeat(woIPTG)_matrix.csv")
 TH131_noIPTG_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220119_TH131repeat(woIPTG)_matrix_KEYS_&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220119_TH131repeat(woIPTG)_matrix_KEYS_&firstread.csv",
   well_ids_column = "Key")
 
 TH131_noIPTG_t0 <- TH131_noIPTG_keys[1:2] %>%
@@ -415,9 +403,9 @@ TH131_noIPTG_2 <- TH131_noIPTG_2[-4]
 
 
 TH100_noIPTG <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220126_TH100repeat(woIPTG)_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220126_TH100repeat(woIPTG)_matrix.csv")
 TH100_noIPTG_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220126_TH100repeat(woIPTG)_matrix_KEYS&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220126_TH100repeat(woIPTG)_matrix_KEYS&firstread.csv",
   well_ids_column = "Key")
 
 TH100_noIPTG_t0 <- TH100_noIPTG_keys[1:2] %>%
@@ -441,14 +429,14 @@ TH100_noIPTG_2 <- TH100_noIPTG_2[-4]
 
 ```
 
-ALTERED IMMUNITIES (Immunity E2, Tsi2)
+Also test co-induction of Tse2 and ColE2 circuits containing altered immunity proteins. 
 
-```{r}
+```{r echo=FALSE}
 
 TH240 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220302_TH240_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220302_TH240_matrix.csv")
 TH240_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220302_TH240_matrix_KEYS&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220302_TH240_matrix_KEYS&firstread.csv",
   well_ids_column = "Key")
 
 TH240_t0 <- TH240_keys[1:2] %>%
@@ -475,9 +463,9 @@ TH240_2 <- TH240_2[-4]
 
 
 TH237 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220303_TH237_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220303_TH237_matrix.csv")
 TH237_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220303_TH237_matrix_KEYS&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220303_TH237_matrix_KEYS&firstread.csv",
   well_ids_column = "Key")
 
 TH237_t0 <- TH237_keys[1:2] %>%
@@ -503,9 +491,9 @@ TH237_2 <- TH237_2[-4]
 
 
 TH245 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220311_TH245repeat_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220311_TH245repeat_matrix.csv")
 TH245_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220311_TH245repeat_matrix_KEYS&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220311_TH245repeat_matrix_KEYS&firstread.csv",
   well_ids_column = "Key")
 
 TH245_t0 <- TH245_keys[1:2] %>%
@@ -532,9 +520,9 @@ TH245_2 <- TH245_2[-4]
 
 
 TH249 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220317_TH249_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220317_TH249_matrix.csv")
 TH249_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220317_TH249_matrix_KEYS&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220317_TH249_matrix_KEYS&firstread.csv",
   well_ids_column = "Key")
 
 TH249_t0 <- TH249_keys[1:2] %>%
@@ -560,9 +548,9 @@ TH249_2 <- TH249_2[-4]
 
 
 TH253 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220324_TH253_matrix.csv")
+  "~/SFA_killswitches/data/matrices/20220324_TH253_matrix.csv")
 TH253_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220324_TH253_matrix_KEYS&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220324_TH253_matrix_KEYS&firstread.csv",
   well_ids_column = "Key")
 
 TH253_t0 <- TH253_keys[1:2] %>%
@@ -585,9 +573,9 @@ TH253_2 <- full_join(TH253_2, TH253_keys, by = "Key")
 TH253_2 <- TH253_2[-4]
 ```
 
-CALCULATE RELATIVE GROWTH OF ALTERED IMMUNITIES WITH WT IMMUNITY SYSTEMS
+Calculate relative growth of altered immunity strains (rel to no toxin induction at each level of immunity induction).
 
-```{r}
+```{r echo=FALSE}
 # Combine growth curves
 curves_Imm <- rbind(TH126_2, TH128_2)
 curves_Imm <- rbind(curves_Imm, TH240_2)
@@ -623,9 +611,9 @@ rel_growth_Imm_small$`Time` <- round(rel_growth_Imm_small$`Time`, digits=2)
 ```
 
 
-PLOT ALTERED IMMUNITY SYSTEMS IN MATRIX/GRID FORMAT
+Plot altered immunity relative growth in grid format.
 
-```{r}
+```{r echo=FALSE}
 # Plot relative growth on faceted grid
 
 # Re-order strains to keep color mapping consistent between graphs
@@ -665,14 +653,13 @@ rel_growth_Imm_small %>%
 
   
 ```
-```{r}
-ggsave(filename = "20220323_matrices_alteredimmunities_Paper.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/altered_immunities", width = 9, height = 3.5, units = "in", device='png', dpi=300)
+```{r echo=FALSE}
+ggsave(filename = "20220323_matrices_alteredimmunities_Paper.png", path = "~/SFA_killswitches/results/figures", width = 9, height = 3.5, units = "in", device='png', dpi=300)
 ```
 
+Plot altered immunities as growth curves with relative growth calculation included.
 
-PLOT ALTERED IMMUNITIES AS GROWTH CURVES WITH RELATIVE GROWTH CALCULATION INCLUDED
-
-```{r}
+```{r echo+FALSE}
 # Plot growth curves for research SLAM talk
 
 curves_Col <- curves_Imm_means %>%
@@ -716,11 +703,11 @@ curves_Col %>%
 
 
 ```
-```{r}
+```{r echo=FALSE}
 ggsave(filename = "TH128_TH253_curves_SLAM.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens", width = 8, height = 3.5, units = "in", device='png', dpi=300, bg = "transparent")
 ```
 
-```{r}
+```{r echo=FALSE}
 
 # Make matrix with growth curves + keep same heatmap aesthetic
 
@@ -796,40 +783,40 @@ data_summary_Imm %>%
         legend.title = element_text(size = 9))
 
 ```
-```{r}
-ggsave(filename = "20220324_matrix&Curves_TH245_2Replicates.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 7, height = 6.5, units = "in", device='png', dpi=300)
+```{r echo=FALSE}
+ggsave(filename = "20220324_matrix&Curves_TH245_2Replicates.png", path = "~/SFA_killswitches/results/figures", width = 7, height = 6.5, units = "in", device='png', dpi=300)
 ```
 
 
 SINGLE TOXINS: EcoRI, LysE, Gef, TisB (Pcym)
 
-```{r}
+```{r echo=FALSE}
 
-TH105 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20201020_TH146_titration_nM_range.csv")
-TH105_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211115_TH100repeat_matrix_KEYS_&firstRead.csv",
-  well_ids_column = "Key")
+# TH105 <- read.csv(
+#   "~/SFA_killswitches/data/matrices/20201020_TH146_titration_nM_range.csv")
+# TH105_keys <- read_plate(
+#   "~/SFA_killswitches/data/matrices/20211115_TH100repeat_matrix_KEYS_&firstRead.csv",
+#   well_ids_column = "Key")
 
 #need to re-do in Synergy plate reader
 
 
 
-TH124 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20210920_Synergy_ToxinScreen2_Plate1.csv")
-TH124_keys <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20210920_keys_forEcoRIonly.csv")
-
-TH124 <- select(TH124, -B22)
-TH124 <- pivot_longer(TH124, cols = A1:G24, names_to = "Key", values_to = "OD600")
-
-TH124 <- full_join(TH124, TH124_keys, by = "Key")
-
-TH124 <- subset(TH124, Strain == 'TH124')
-
-y <- hms(TH124$Time)
-TH124$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH124$Time <- round(as.numeric(TH124$Time), digits = 2)
+# TH124 <- read.csv(
+#   "~/SFA_killswitches/data/matrices/20210920_Synergy_ToxinScreen2_Plate1.csv")
+# TH124_keys <- read.csv(
+#   "~/SFA_killswitches/data/matrices/20210920_keys_forEcoRIonly.csv")
+# 
+# TH124 <- select(TH124, -B22)
+# TH124 <- pivot_longer(TH124, cols = A1:G24, names_to = "Key", values_to = "OD600")
+# 
+# TH124 <- full_join(TH124, TH124_keys, by = "Key")
+# 
+# TH124 <- subset(TH124, Strain == 'TH124')
+# 
+# y <- hms(TH124$Time)
+# TH124$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH124$Time <- round(as.numeric(TH124$Time), digits = 2)
 
 ```
 
@@ -838,15 +825,14 @@ The starting ODs were higher than intended, though. But, as I'm measuring
 relative growth it shouldn't really matter unless it affects perceived cumate
 concentrations at the onset of the assay
 
-```{r}
+```{r echo=FALSE}
 # Second dataset for EcoRI (repeated with the same concentrations of cumate)
 # additional single toxins
 
-
 TH124 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211206_EcoRI_titration.csv")
+  "~/SFA_killswitches/data/matrices/20211206_EcoRI_titration.csv")
 TH124_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20211206_EcoRI_titration_KEYS.csv",
+  "~/SFA_killswitches/data/matrices/20211206_EcoRI_titration_KEYS.csv",
   well_ids_column = "Key")
 
 TH124 <- pivot_longer(TH124, cols = F01:G02, names_to = "Key", values_to = "OD600")
@@ -873,11 +859,11 @@ rel_growth_TH124$`cumate (mM)` <- as.factor(rel_growth_TH124$`cumate (mM)`)
 rel_growth_TH124$`Time` <- round(rel_growth_TH124$`Time`, digits=2)
 ```
 
-```{r}
+```{r echo=FALSE}
 TH203_TH204 <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220203_TH86_TH203_TH204_titration.csv")
+  "~/SFA_killswitches/data/matrices/20220203_TH86_TH203_TH204_titration.csv")
 TH203_TH204_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220203_TH86_TH203_TH204_titration_KEYS_&firstread.csv",
+  "~/SFA_killswitches/data/matrices/20220203_TH86_TH203_TH204_titration_KEYS_&firstread.csv",
   well_ids_column = "Key")
 
 TH203_TH204_t0 <- TH203_TH204_keys[1:2] %>%
@@ -923,11 +909,11 @@ TH203_TH204_avgs <- TH203_TH204 %>%
 
 
 
-```{r}
+```{r echo=FALSE}
 single_toxins <- read.csv(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220121_single_toxins_SBW25.csv")
+  "~/SFA_killswitches/data/matrices/20220121_single_toxins_SBW25.csv")
 single_toxins_keys <- read_plate(
-  "/Users/halvorsen1/Documents/RStudio/csv_files/20220121_single_toxins_SBW25_KEYS.csv",
+  "~/SFA_killswitches/data/matrices/20220121_single_toxins_SBW25_KEYS.csv",
   well_ids_column = "Key")
 
 Time <- 0
@@ -971,17 +957,11 @@ Pcym_avgs$`IPTG (mM)` <- as.factor(Pcym_avgs$`IPTG (mM)`)
 
 # IPTG serves as the Y-axis, which allows me to plot these data as a geom_tile
 
-
-
-rel_growth_TH124$`cumate (mM)` <- as.factor(rel_growth_TH124$`cumate (mM)`)
-rel_growth_TH124$`IPTG` <- as.factor(rel_growth_TH124$`IPTG`)
-
-rel_growth_TH124$`Time` <- round(rel_growth_TH124$`Time`, digits=2)
 ```
 
 Graph EcoRI
 
-```{r}
+```{r echo=FALSE}
 rel_growth_TH203_TH204 %>%
   filter(`Time` == 8.01) %>%
   filter(Strain == "TH203") %>%
@@ -1004,13 +984,32 @@ rel_growth_TH203_TH204 %>%
         ) 
 ```
 
-```{r}
-ggsave(filename = "20220126_TisB_matrix_forPaper.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 4, height = 1.3, units = "in", device='png', dpi=300)
+```{r echo=FALSE}
+ggsave(filename = "20220126_TisB_matrix_forPaper.png", path = "~/SFA_killswitches/results/figures", width = 4, height = 1.3, units = "in", device='png', dpi=300)
 ```
 
 Plot single toxins on Pcym
 
-```{r}
+```{r echo=FALSE}
+strain_names <-as_labeller(c('TH37' = "wild type",
+                  'TH86' = "regulators only",
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH124' = "EcoRI, no methylase",
+                  'TH125' = "RalR-RalA",
+                  'TH126' = "Tse2-Tsi2",
+                  'TH127' = "colicin E1-ImmE1",
+                  'TH128' = "colicin E2-ImmE2",
+                  'TH131' = "RelE-RelB",
+                  'TH106' = "ColE1-ImmE1 in E. coli",
+                  'TH107' = "ColE2-ImmE2 in E. coli",
+                  'TH108' = "RalR-RalA in E. coli",
+                  'TH109' = "Tse2-Tsi2 in E. coli",
+                  'TH177' = "colE2-Imm-ssrA[-ILV]",
+                  'TH179' = "tse2-tsi2-ssrA[-ILV]",
+                  "TH203" = "TisB",
+                  "TH204" = "Gef"))
 
 rel_growth_TH203_TH204 %>%
   filter(`Time` == 8.01) %>%
@@ -1091,14 +1090,14 @@ TH203_TH204_avgs %>%
 
 ```
 
-```{r}
+```{r echo=FALSE}
 ggsave(filename = "20220204_Pcym_poreFormers_curves_TisB.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Single_toxins", width = 4, height = 2, units = "in", device='png', dpi=300)
 ```
 
-
 Combine growth curves into single data frame and find mean + sd
 
-```{r}
+```{r echo=FALSE}
+
 # Combine growth curves
 curves_all <- rbind(TH88_2, TH99b_2)
 #curves_all <- rbind(curves_all, TH99b_2)
@@ -1126,16 +1125,10 @@ curves_all_means <- curves_all %>%
   group_by(`Strain`, `IPTG (mM)`, `cumate (mM)`, Time) %>%
   summarise_at(.vars = ('OD600'), .funs = c(meanOD = mean, sdOD = sd))
 
-```
-
-Individual growth curves
-
-```{r}
-
 graphed_curves <- curves_all_means %>%
   filter(`IPTG (mM)` == 0 & `cumate (mM)` == 0)
 
-strain_names2 <-as_labeller(c('TH37' = "wild type",
+strain_names <-as_labeller(c('TH37' = "wild type",
                   'TH86' = "regulators only",
                   'TH88' = "CcdB-CcdA",
                   'TH99' = "HicA-HicB",
@@ -1155,10 +1148,6 @@ strain_names2 <-as_labeller(c('TH37' = "wild type",
                   "TH203" = "TisB",
                   "TH204" = "Gef"))
 
-graphed_curves <- factor(graphed_curves$Strain,
-                         levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128", "TH124"))
-
-graphed_curves$Time <- as.numeric(graphed_curves$Time)
 
 graphed_curves %>%
   filter(Strain != "TH204") %>%
@@ -1186,7 +1175,7 @@ graphed_curves %>%
                                 "TH131" = "#F7AB37", 
                                 "TH124" = "#30ECEC",
                                 "TH203" = "#D4BFDB"),
-                     labels = strain_names2) +  
+                     labels = strain_names) +  
   theme_bw() +
   theme(strip.background = element_blank(),
         panel.grid.major = element_blank(),
@@ -1201,7 +1190,7 @@ graphed_curves %>%
 
 Altered Immunities - basal burden curves (no inducers)
 
-```{r}
+```{r echo=FALSE}
 graphed_curves_Imm <- curves_Imm_means %>%
   filter(`IPTG (mM)` == 0 & `cumate (mM)` == 0)
 
@@ -1241,16 +1230,10 @@ graphed_curves_Imm %>%
 
 ```
 
-
-
-
-
-
-
 Calculate growth of each strain @ each time point relative to untreated sample
 for that condition, with error.
 
-```{r}
+```{r echo=FALSE}
 # Calculate relative growth for matrix 
 # (to sample without cuminic acid added for each IPTG condition)
 
@@ -1311,7 +1294,7 @@ rel_growth_IPTG$`Time` <- round(rel_growth_IPTG$`Time`, digits=2)
 
 Plot relative growth of IPTG samples only
 
-```{r}
+```{r echo=FALSE}
 
 rel_growth_IPTG$Strain <- factor(rel_growth_IPTG$Strain,
                          levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128"))
@@ -1341,160 +1324,165 @@ plot_grid_IPTG <- rel_growth_IPTG %>%
 
 ```
 
-```{r}
-ggsave(filename = "20220122_all_matrices_IPTGanalysis.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 3.7, height = 3.8, units = "in", device='png', dpi=300)
+```{r echo=FALSE}
+ggsave(filename = "20220122_all_matrices_IPTGanalysis.png", path = "~/SFA_killswitches/results/figures", width = 3.7, height = 3.8, units = "in", device='png', dpi=300)
 ```
 
 
 Use Growthcurver to find growth rate/generation time for each strain under ininduced conditions (wells A1 & A2)
 
-```{r}
-library(growthcurver)
-library(kableExtra)
-
-TH88_t0 <- pivot_wider(TH88_t0, names_from = "Key", values_from = "OD600")
-TH88_3 <- TH88
-y <- hms(TH88_3$Time)
-TH88_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH88_3 <- rbind(TH88_t0, TH88_3)
-TH88_3$Time <- round(as.numeric(TH88_3$Time), digits = 2)
-
-TH88$Blank <- 0.043
-
-y <- hms(TH88$Time)
-TH88$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH88$Time <- round(as.numeric(TH88$Time), digits = 2)
-
-TH88_growth_out <- SummarizeGrowthByPlate(TH88, bg_correct = "blank")
-
-TH88_growth_all <- "/Users/halvorsen1/Documents/R_graphs/Growthcurver//TH88_growth_all.txt"
-write.table(TH88_growth_out, file = TH88_growth_all, 
-            quote = FALSE, sep = "\t", row.names = FALSE)
-
-TH88_1 <- SummarizeGrowth(TH88_3$Time, TH88_3$A01)
-TH88_2 <- SummarizeGrowth(TH88_3$Time, TH88_3$A02)
-
-png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH88_matrix_undinduced_gcFit.png",
-    width = 520, height = 480, units = "px")
-plot(TH88_1)
-dev.off()
-
-TH88_rate <- mean(TH88_1$vals$r, TH88_2$vals$r)
-
-
-TH99_t0 <- pivot_wider(TH99_t0, names_from = "Key", values_from = "OD600")
-TH99_3 <- TH99
-y <- hms(TH99_3$Time)
-TH99_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH99_3 <- rbind(TH99_t0, TH99_3)
-TH99_3$Time <- round(as.numeric(TH99_3$Time), digits = 2)
-
-TH99_1 <- SummarizeGrowth(TH99_3$Time, TH99_3$A01)
-TH99_2 <- SummarizeGrowth(TH99_3$Time, TH99_3$A02)
-
-png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH99_matrix_undinduced_gcFit.png",
-    width = 520, height = 480, units = "px")
-plot(TH99_1)
-dev.off()
-
-TH99_rate <- mean(TH99_1$vals$r, TH99_2$vals$r)
-
-
-TH100_t0 <- pivot_wider(TH100_t0, names_from = "Key", values_from = "OD600")
-TH100_3 <- TH100
-y <- hms(TH100_3$Time)
-TH100_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH100_3 <- rbind(TH100_t0, TH100_3)
-TH100_3$Time <- round(as.numeric(TH100_3$Time), digits = 2)
-
-TH100_1 <- SummarizeGrowth(TH100_3$Time, TH100_3$A01)
-TH100_2 <- SummarizeGrowth(TH100_3$Time, TH100_3$A02)
-
-png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH100_matrix_undinduced_gcFit.png",
-    width = 520, height = 480, units = "px")
-plot(TH100_1)
-dev.off()
-
-TH100_rate <- mean(TH100_1$vals$r, TH100_2$vals$r)
-
-
-
-TH131_t0 <- pivot_wider(TH131_t0, names_from = "Key", values_from = "OD600")
-TH131_3 <- TH131
-y <- hms(TH131_3$Time)
-TH131_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH131_3 <- rbind(TH131_t0, TH131_3)
-TH131_3$Time <- round(as.numeric(TH131_3$Time), digits = 2)
-
-TH131_1 <- SummarizeGrowth(TH131_3$Time, TH131_3$A01)
-TH131_2 <- SummarizeGrowth(TH131_3$Time, TH131_3$A02)
-
-png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH131_matrix_undinduced_gcFit.png",
-    width = 520, height = 480, units = "px")
-plot(TH131_1)
-dev.off()
-
-TH131_rate <- mean(TH131_1$vals$r, TH131_2$vals$r)
-
-
-
-TH126_t0 <- pivot_wider(TH126_t0, names_from = "Key", values_from = "OD600")
-TH126_3 <- TH126
-y <- hms(TH126_3$Time)
-TH126_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH126_3 <- rbind(TH126_t0, TH126_3)
-TH126_3$Time <- round(as.numeric(TH126_3$Time), digits = 2)
-
-TH126_1 <- SummarizeGrowth(TH126_3$Time, TH126_3$A01)
-TH126_2 <- SummarizeGrowth(TH126_3$Time, TH126_3$A02)
-
-png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH126_matrix_undinduced_gcFit.png",
-    width = 520, height = 480, units = "px")
-plot(TH126_1)
-dev.off()
-
-TH126_rate <- mean(TH126_1$vals$r, TH126_2$vals$r)
-
-
-
-TH128_t0 <- pivot_wider(TH128_t0, names_from = "Key", values_from = "OD600")
-TH128_3 <- TH128
-y <- hms(TH128_3$Time)
-TH128_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
-TH128_3 <- rbind(TH128_t0, TH128_3)
-TH128_3$Time <- round(as.numeric(TH128_3$Time), digits = 2)
-
-TH128_1 <- SummarizeGrowth(TH128_3$Time, TH128_3$A01)
-TH128_2 <- SummarizeGrowth(TH128_3$Time, TH128_3$A02)
-
-png(filename = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/TH128_matrix_undinduced_gcFit.png",
-    width = 520, height = 480, units = "px")
-plot(TH128_1)
-dev.off()
-
-TH128_rate <- mean(TH128_1$vals$r, TH128_2$vals$r)
-
-
-Strain <- c("TH88", "TH99", "TH100", "TH131", "TH126", "TH128")
-rate <- c(TH88_rate, TH99_rate, TH100_rate, TH131_rate, TH126_rate, TH128_rate)
-`gen_time` <- c(TH88_1$vals$t_gen, TH99_1$vals$t_gen, TH100_1$vals$t_gen, TH131_1$vals$t_gen, TH126_1$vals$t_gen, TH128_1$vals$t_gen)
-
-growth_rates <- data.frame(Strains, rate, `gen_time`)
-growth_rates$rate <- round(growth_rates$rate, digits = 2)
-growth_rates$gen_time <- round(growth_rates$gen_time, digits = 2)
-growth_rates <- growth_rates %>%
-  mutate('100 generations (hr)' = round(`t_gen` * 100, digits = 2))
-write.table(growth_rates, file = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/killswitch_growthRates.txt")
-
-growth_table <- growth_rates %>%
-  kbl(caption = "Kill switch strains: growth rate and generation times") %>%
-  kable_classic(full_width = F, html_font = "Arial") %>%
-  save_kable(file = "/Users/halvorsen1/Documents/R_graphs/Growthcurver/growth_rates.png", self_contained = T, zoom = 4) 
+```{r echo=FALSE}
+# library(growthcurver)
+# library(kableExtra)
+# 
+# TH88_t0 <- TH88_keys[1:2] %>%
+#   pivot_wider(id_cols = 0, names_from = "Key", values_from = "0") 
+# TH88_t0 <- cbind(Time, TH88_t0)
+# TH88_t0 <- pivot_longer(TH88_t0, cols = A01:H12, names_to = "Key", values_to = "OD600")
+# 
+# TH88_t0 <- pivot_wider(TH88_t0, names_from = "Keys", values_from = "OD600")
+# TH88_3 <- TH88
+# y <- hms(TH88_3$Time)
+# TH88_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH88_3 <- rbind(TH88_t0, TH88_3)
+# TH88_3$Time <- round(as.numeric(TH88_3$Time), digits = 2)
+# 
+# TH88$Blank <- 0.043
+# 
+# y <- hms(TH88$Time)
+# TH88$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH88$Time <- round(as.numeric(TH88$Time), digits = 2)
+# 
+# TH88_growth_out <- SummarizeGrowthByPlate(TH88, bg_correct = "blank")
+# 
+# TH88_growth_all <- "/Users/halvorsen1/SFA_killswitches/results/figures/TH88_growth_all.txt"
+# write.table(TH88_growth_out, file = TH88_growth_all, 
+#             quote = FALSE, sep = "\t", row.names = FALSE)
+# 
+# TH88_1 <- SummarizeGrowth(TH88_3$Time, TH88_3$A01)
+# TH88_2 <- SummarizeGrowth(TH88_3$Time, TH88_3$A02)
+# 
+# png(filename = "/Users/halvorsen1/SFA_killswitches/results/figures/TH88_matrix_undinduced_gcFit.png",
+#     width = 520, height = 480, units = "px")
+# plot(TH88_1)
+# dev.off()
+# 
+# TH88_rate <- mean(TH88_1$vals$r, TH88_2$vals$r)
+# 
+# 
+# TH99_t0 <- pivot_wider(TH99_t0, names_from = "Key", values_from = "OD600")
+# TH99_3 <- TH99
+# y <- hms(TH99_3$Time)
+# TH99_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH99_3 <- rbind(TH99_t0, TH99_3)
+# TH99_3$Time <- round(as.numeric(TH99_3$Time), digits = 2)
+# 
+# TH99_1 <- SummarizeGrowth(TH99_3$Time, TH99_3$A01)
+# TH99_2 <- SummarizeGrowth(TH99_3$Time, TH99_3$A02)
+# 
+# png(filename = "/Users/halvorsen1/SFA_killswitches/results/figures/TH99_matrix_undinduced_gcFit.png",
+#     width = 520, height = 480, units = "px")
+# plot(TH99_1)
+# dev.off()
+# 
+# TH99_rate <- mean(TH99_1$vals$r, TH99_2$vals$r)
+# 
+# 
+# TH100_t0 <- pivot_wider(TH100_t0, names_from = "Key", values_from = "OD600")
+# TH100_3 <- TH100
+# y <- hms(TH100_3$Time)
+# TH100_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH100_3 <- rbind(TH100_t0, TH100_3)
+# TH100_3$Time <- round(as.numeric(TH100_3$Time), digits = 2)
+# 
+# TH100_1 <- SummarizeGrowth(TH100_3$Time, TH100_3$A01)
+# TH100_2 <- SummarizeGrowth(TH100_3$Time, TH100_3$A02)
+# 
+# png(filename = "/Users/halvorsen1/SFA_killswitches/results/figures/TH100_matrix_undinduced_gcFit.png",
+#     width = 520, height = 480, units = "px")
+# plot(TH100_1)
+# dev.off()
+# 
+# TH100_rate <- mean(TH100_1$vals$r, TH100_2$vals$r)
+# 
+# 
+# 
+# TH131_t0 <- pivot_wider(TH131_t0, names_from = "Key", values_from = "OD600")
+# TH131_3 <- TH131
+# y <- hms(TH131_3$Time)
+# TH131_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH131_3 <- rbind(TH131_t0, TH131_3)
+# TH131_3$Time <- round(as.numeric(TH131_3$Time), digits = 2)
+# 
+# TH131_1 <- SummarizeGrowth(TH131_3$Time, TH131_3$A01)
+# TH131_2 <- SummarizeGrowth(TH131_3$Time, TH131_3$A02)
+# 
+# png(filename = "/Users/halvorsen1/SFA_killswitches/results/figures/TH131_matrix_undinduced_gcFit.png",
+#     width = 520, height = 480, units = "px")
+# plot(TH131_1)
+# dev.off()
+# 
+# TH131_rate <- mean(TH131_1$vals$r, TH131_2$vals$r)
+# 
+# 
+# 
+# TH126_t0 <- pivot_wider(TH126_t0, names_from = "Key", values_from = "OD600")
+# TH126_3 <- TH126
+# y <- hms(TH126_3$Time)
+# TH126_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH126_3 <- rbind(TH126_t0, TH126_3)
+# TH126_3$Time <- round(as.numeric(TH126_3$Time), digits = 2)
+# 
+# TH126_1 <- SummarizeGrowth(TH126_3$Time, TH126_3$A01)
+# TH126_2 <- SummarizeGrowth(TH126_3$Time, TH126_3$A02)
+# 
+# png(filename = "/Users/halvorsen1/SFA_killswitches/results/figures/TH126_matrix_undinduced_gcFit.png",
+#     width = 520, height = 480, units = "px")
+# plot(TH126_1)
+# dev.off()
+# 
+# TH126_rate <- mean(TH126_1$vals$r, TH126_2$vals$r)
+# 
+# 
+# 
+# TH128_t0 <- pivot_wider(TH128_t0, names_from = "Key", values_from = "OD600")
+# TH128_3 <- TH128
+# y <- hms(TH128_3$Time)
+# TH128_3$Time <- hour(y) + minute(y) / 60 + second(y) / 360
+# TH128_3 <- rbind(TH128_t0, TH128_3)
+# TH128_3$Time <- round(as.numeric(TH128_3$Time), digits = 2)
+# 
+# TH128_1 <- SummarizeGrowth(TH128_3$Time, TH128_3$A01)
+# TH128_2 <- SummarizeGrowth(TH128_3$Time, TH128_3$A02)
+# 
+# png(filename = "/Users/halvorsen1/SFA_killswitches/results/figures/TH128_matrix_undinduced_gcFit.png",
+#     width = 520, height = 480, units = "px")
+# plot(TH128_1)
+# dev.off()
+# 
+# TH128_rate <- mean(TH128_1$vals$r, TH128_2$vals$r)
+# 
+# 
+# Strain <- c("TH88", "TH99", "TH100", "TH131", "TH126", "TH128")
+# rate <- c(TH88_rate, TH99_rate, TH100_rate, TH131_rate, TH126_rate, TH128_rate)
+# `gen_time` <- c(TH88_1$vals$t_gen, TH99_1$vals$t_gen, TH100_1$vals$t_gen, TH131_1$vals$t_gen, TH126_1$vals$t_gen, TH128_1$vals$t_gen)
+# 
+# growth_rates <- data.frame(Strain, rate, `gen_time`)
+# growth_rates$rate <- round(growth_rates$rate, digits = 2)
+# growth_rates$gen_time <- round(growth_rates$gen_time, digits = 2)
+# growth_rates <- growth_rates %>%
+#   mutate('100 generations (hr)' = round(`t_gen` * 100, digits = 2))
+# write.table(growth_rates, file = "/Users/halvorsen1/SFA_killswitches/results/figures/killswitch_growthRates.txt")
+# 
+# growth_table <- growth_rates %>%
+#   kbl(caption = "Kill switch strains: growth rate and generation times") %>%
+#   kable_classic(full_width = F, html_font = "Arial") %>%
+#   save_kable(file = "/Users/halvorsen1/SFA_killswitches/results/figures/growth_rates.png", self_contained = T, zoom = 4) 
 
 ```
 
 
-```{r}
+```{r echo=FALSE}
 # Plot relative growth on faceted grid
 
 # Re-order strains to keep color mapping consistent between graphs
@@ -1560,14 +1548,14 @@ rel_growth_combined %>%
   
 ```
 
-```{r}
-ggsave(filename = "20220714_ColTsematrices.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 9, height = 3.5, units = "in", device='png', dpi=300)
+```{r echo=FALSE}
+ggsave(filename = "20220714_ColTsematrices.png", path = "~/SFA_killswitches/results/figures", width = 9, height = 3.5, units = "in", device='png', dpi=300)
 ```
 Immunity matrices: 4x3
 TA matrices: 9x3.5
 All matrices: 13x3.5
 2 rows: 11x6, or 11x7.2
-```{r}
+```{r echo=FALSE}
 # Plot relative growth on faceted grid from NEW DATA SET with values relative to the cumate == 0 AND IPTG == 0 sample for each strain
 
 # Re-order strains to keep color mapping consistent between graphs
@@ -1624,7 +1612,7 @@ plot_grid2 <- rel_growth_new %>%
 
 
 
-```{r}
+```{r echo=FALSE}
 
 # Make matrix with growth curves + keep same heatmap aesthetic
 
@@ -1704,13 +1692,13 @@ data_summary %>%
 ```
 
 
-```{r}
-ggsave(filename = "20211123_matrix&Curves_TH126_noIPTG_2Replicates.png", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens/Induction_matrices", width = 6, height = 6.5, units = "in", device='png', dpi=300)
+```{r echo=FALSE}
+ggsave(filename = "20211123_matrix&Curves_TH126_noIPTG_2Replicates.png", path = "~/SFA_killswitches/results/figures", width = 6, height = 6.5, units = "in", device='png', dpi=300)
 ```
 
 
 
-```{r}
+```{r echo=FALSE}
 # Plot as growth curves
 
 # Re-order for color-mapping consistency between graphs
@@ -1749,12 +1737,6 @@ curves_all_means %>% ggplot(aes(x = Time, y = meanOD, color = Strain, group = St
         legend.position = "bottom")
 ```
 
-```{r}
+```{r echo=FALSE}
 ggsave(filename = "20211115_matrix_growthCurves_TH88_TH99repeat_TH128_TH100repeat_TH126", path = "/Users/halvorsen1/Documents/R_graphs/Toxin_screens", width = 7, height = 6.5, units = "in", device='png', dpi=300)
 ```
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

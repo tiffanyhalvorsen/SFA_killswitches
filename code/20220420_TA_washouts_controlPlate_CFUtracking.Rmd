@@ -1,0 +1,640 @@
+---
+title: "-outs: both in the same plate, with a second plate control (no inducers post washout)"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(plater)
+library(tidyverse)
+library(lubridate) #hms function
+library(reshape2)
+```
+
+```{r}
+washout_CFUs <- read.csv(file = "/Users/halvorsen1/Documents/RStudio/csv_files/20220420_TA_bothWashouts_Escapes.csv")
+
+washout_CFUs$Strain <-factor(washout_CFUs$Strain,
+                  levels = c("TH88", "TH99", "TH100", "TH131"))
+
+washout_CFUs$Pre_washout <-factor(washout_CFUs$Pre_washout,
+                  levels = c("no cumate", "0.07 mM cumate", "0.3 mM cumate", "no IPTG", "0.3 mM IPTG", "0.7 mM IPTG"))
+
+strain_names <- c("TH88" = "CcdB-CcdA",
+                              "TH99" = "HicA-HicB",
+                              "TH100" = "ParE-ParD",
+                              "TH131" = "RelE-RelB")
+
+washout_CFUs %>%
+  filter(Time != 5 & Time != 0) %>%
+  filter(Post_washout == "1 mM IPTG") %>%
+  ggplot(aes(x = as.character(Time), y = Escape_freq, fill = Strain)) +
+  geom_bar(position = "dodge",
+           stat = "identity",
+           size = 1, 
+           color = "black") +
+  facet_grid(~ Pre_washout, space = "free_x", scales = "free_x", switch="x") +
+  labs(y="survival ratio",
+       x = "IPTG",
+       title = "Expt washout: cumate into IPTG") +
+  scale_fill_manual(values = c("TH88" = "#EC5E8D",
+                                "TH99" = "#DAA9ED",
+                               "TH100" = "#E0D935",
+                               "TH131" = "#F7AB37"),
+                     labels = strain_names) +
+
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  #geom_vline(xintercept = c(1.5), size = 0.5) +
+  geom_hline(yintercept = 1, color = "black") +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(2, "lines"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(face = "bold", size = 10),
+        legend.position = "right",
+        legend.title = element_blank(),
+        axis.text.x = element_text(size = 12),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 14)
+        )
+
+
+
+```
+
+```{r}
+ggsave(filename = "20220422_TAs_IPTG_washout_Escape_Plate2_t24.png", path = "/Users/halvorsen1/Documents/R_graphs/Escape_mutants", width = 9, height = 4, units = "in", device='png', dpi=300)
+```
+
+washout_CFUs <- aggregate(washout_CFUs, by = list(washout_CFUs$))
+
+Plot raw CFUs instead of ratio
+
+```{r}
+washout_CFUs_long <- read_csv(file = "/Users/halvorsen1/Documents/RStudio/csv_files/20220421_escapeFrequencies_TA_washouts_long.csv")
+washout_CFUs_long$Selection <-factor(washout_CFUs_long$Selection,
+                  levels = c("permissive", "nonpermissive"))
+washout_CFUs_long$Strain <-factor(washout_CFUs_long$Strain,
+                  levels = c("TH88", "TH99", "TH100", "TH131"))
+washout_CFUs_long$Pre_washout <-factor(washout_CFUs_long$Pre_washout,
+                  levels = c("no cumate", "0.07 mM cumate", "0.3 mM cumate", "no IPTG", "0.3 mM IPTG", "0.7 mM IPTG"))
+
+strain_names <- as_labeller(c("TH88" = "CcdB\nCcdA",
+                              "TH99" = "HicA\nHicB",
+                              "TH100" = "ParE\nParD",
+                              "TH131" = "RelE\nRelB"))
+
+
+
+washout_CFUs_long %>%
+  filter(Time != '5' & Post_washout == "no IPTG" & Time == "19" & Pre_washout != "0.07 mM cumate") %>%
+  group_by(Selection, Strain) %>%
+  ggplot(aes(x = Selection, y = CFU, fill = Pre_washout)) +
+  geom_bar(position = "dodge",
+           stat = "identity") +
+  facet_grid(~ Strain, labeller = strain_names, space = "free_x", scales = "free_x", switch="x") +
+  labs(y="CFU/mL",
+       legend = "Pre-wash\ntreatment",
+       title = "Control: no IPTG post-wash, Last time point") +
+  scale_fill_manual(values = c("no cumate" = "grey",
+                                "0.3 mM cumate" = "darkred"
+                                )) +
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  #scale_x_discrete(labels = strain_names) +
+  geom_vline(xintercept = c(5.5, 7.5), size = 0.3) +
+  geom_hline(yintercept = 1, color = "black") +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(2, "lines"),
+        panel.grid.major.y = element_line(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 12), 
+        strip.text = element_text(face = "bold", size = 9),
+        legend.position = "right",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(angle = 90, size = 9, vjust = .2, hjust = 0.95),
+        axis.title.x = element_blank())
+
+```
+```{r}
+ggsave(filename = "20220422_TA_washouts_CFUs_CTRL_t19.png", path = "/Users/halvorsen1/Documents/R_graphs/Escape_mutants", width = 7.5, height = 4.5, units = "in", device='png', dpi=300)
+```
+
+
+Control Plate (Plate1, ran in HTX)
+
+```{r}
+plate1_outgrowth <- read_csv(file = "/Users/halvorsen1/Documents/RStudio/csv_files/20220420_TA_bothWashouts_Plate1_outgrowth.csv")
+plate1_washout <- read_csv(file = "/Users/halvorsen1/Documents/RStudio/csv_files/20220420_TA_bothWashouts_Plate1_washout.csv")
+plate1_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220420_TA_bothWashouts_Plate1_KEYS.csv",
+  well_ids_column = "Key")
+
+plate1_outgrowth <- pivot_longer(plate1_outgrowth, cols = A01:H12, names_to = "Key", values_to = "OD600")
+plate1_washout <- pivot_longer(plate1_washout, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+#Reformat time
+y <- hms(plate1_outgrowth$`Time`)
+plate1_outgrowth$`Time` <- hour(y) + minute(y) / 60 + second(y) / 360
+
+y <- hms(plate1_washout$`Time`)
+plate1_washout$`Time` <- hour(y) + minute(y) / 60 + second(y) / 360
+
+plate1_washout$Time <- round(plate1_washout$Time + 6.5, digits = 2)
+
+plate1 <- rbind(plate1_outgrowth, plate1_washout)
+
+plate1 <- full_join(plate1, plate1_keys, by = "Key")
+```
+
+
+Control Plate, cumate washout:
+
+```{r}
+plate1_cum <- plate1 %>%
+  filter(washout == 'cumate') %>%
+  group_by(Strain, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = "OD600", .funs = c(meanOD = mean, sdOD = sd))
+
+# Plot both outgrowth and washout together on 1 graph
+
+strain_names <- as_labeller(c(
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH131' = "RelE-RelB"))
+
+plate1_cum$Strain <- factor(plate1_cum$Strain,
+                         levels = c("TH88", "TH99", "TH100", "TH131"))
+
+cumate_vals <- c(0,0.02,0.07,0.1,0.3,0.5)
+discrete_cum <- c("#DBC873", "#C2A464", "#C8B09D", "#AD8E97", "#AC75C1", "#A442C9", "#A442C9")
+plate1_cum$`cumate (mM)`<- as.factor(plate1_cum$`cumate (mM)`)
+
+plate2_cum %>% 
+  filter(`cumate (mM)` == 0 | `cumate (mM)` == 0.07 | `cumate (mM)` == 0.3) %>%
+  ggplot(aes(x = Time, y = meanOD, color = `Strain` , group = `Strain`)) +
+  facet_wrap(facets = vars(`cumate (mM)`), nrow = 5, ncol = 6) +
+  geom_rect(xmin=-.3, 
+            xmax=5.5, 
+            ymin=-.25, 
+            ymax=max(plate1_cum$Time),
+            color = NA,
+            fill = "gray93", 
+            alpha = 0.5) +
+  geom_line(size = 0.5) +  
+  geom_point(size = 1) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.5) +
+  scale_color_manual(values = c("TH88" = "#EC5E8D",
+                                "TH99" = "#DAA9ED",
+                               "TH100" = "#E0D935",
+                               "TH131" = "#F7AB37"),
+                     labels = strain_names) +
+  labs(x = 'Time (hrs)', 
+       y = expression('OD'[600]),
+       title = "Experimental washout: cumate washout into IPTG") +
+  scale_x_continuous(limits = c(0,25), breaks = seq(0,25,4)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  #scale_color_gradient(low = "#DCCC15", 
+  #                     high = "#876493",
+  #                     guide = "legend", 
+  #                     aesthetics = "color", 
+  #                     values = cumate_vals,
+  #                     na.value = NA) +
+  #scale_colour_brewer(palette = "spectral", direction = -1) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        #strip.text.x = element_text(face = "bold", size = 12),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 13),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        legend.text = element_text(size = 14),
+        legend.title = element_blank(),
+        strip.text.x = element_text(size = 12),
+        legend.key.size = unit(0.8, 'cm'),
+        axis.title = element_text(size = 14)
+          )
+
+```
+```{r}
+ggsave(filename = "20220420_TAs_cum_washout_Plate2_FigS4.png", path = "/Users/halvorsen1/Documents/R_graphs/Washouts", width = 9, height = 3, units = "in", device='png', dpi=300)
+```
+
+
+Control Plate, IPTG washout:
+
+```{r}
+plate1_IPTG <- plate1 %>%
+  filter(washout == 'IPTG') %>%
+  group_by(Strain, `IPTG (mM)`, Time) %>%
+  summarise_at(.vars = "OD600", .funs = c(meanOD = mean, sdOD = sd))
+
+# Plot both outgrowth and washout together on 1 graph
+
+strain_names <- as_labeller(c(
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH131' = "RelE-RelB"))
+
+plate1_IPTG$Strain <- factor(plate1_IPTG$Strain,
+                         levels = c("TH88", "TH99", "TH100", "TH131"))
+
+discrete_IPTG <- c("#A442C9", "#AC75C1", "#AD8E97", "#C8B09D", "#C2A464", "#DBC873")
+plate1_IPTG$`IPTG (mM)`<- as.factor(plate1_IPTG$`IPTG (mM)`)
+
+plate1_IPTG %>% 
+  #filter(`IPTG (mM)` == 0) %>%
+  ggplot(aes(x = Time, y = meanOD, color = `Strain` , group = `Strain`)) +
+  facet_wrap(facets = vars(`IPTG (mM)`), nrow = 5, ncol = 6) +
+  geom_rect(xmin=-.3, 
+            xmax=5.5, 
+            ymin=-.25, 
+            ymax=max(plate1_cum$Time),
+            color = NA,
+            fill = "gray93", 
+            alpha = 0.5) +
+  geom_line(size = 0.5) +  
+  geom_point(size = 1) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.5) +
+  scale_color_manual(values = c("TH88" = "#EC5E8D",
+                                "TH99" = "#DAA9ED",
+                               "TH100" = "#E0D935",
+                               "TH131" = "#F7AB37"),
+                     labels = strain_names) +
+  labs(x = 'Time (hrs)', 
+       y = expression('OD'[600]),
+       title = "Control washout: IPTG washout into LB") +
+  scale_x_continuous(limits = c(0,25), breaks = seq(0,25,4)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  #scale_color_gradient(low = "#DCCC15", 
+  #                     high = "#876493",
+  #                     guide = "legend", 
+  #                     aesthetics = "color", 
+  #                     values = cumate_vals,
+  #                     na.value = NA) +
+  #scale_colour_brewer(palette = "spectral", direction = -1) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        #strip.text.x = element_text(face = "bold", size = 12),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 16),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        legend.text = element_text(size = 14),
+        legend.title = element_blank(),
+        strip.text.x = element_text(size = 12),
+        legend.key.size = unit(0.8, 'cm'),
+        axis.title = element_text(size = 14)
+          )
+```
+
+```{r}
+ggsave(filename = "20220420_TAs_IPTG_washout_Plate1_ALL.png", path = "/Users/halvorsen1/Documents/R_graphs/Washouts", width = 14, height = 3, units = "in", device='png', dpi=300)
+```
+
+Experimental Plate (Plate2, ran in H1)
+
+```{r}
+plate2_outgrowth <- read_csv(file = "/Users/halvorsen1/Documents/RStudio/csv_files/20220420_TA_bothWashouts_plate2_outgrowth.csv")
+plate2_washout <- read_csv(file = "/Users/halvorsen1/Documents/RStudio/csv_files/20220420_TA_bothWashouts_plate2_washout.csv")
+plate2_keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220420_TA_bothWashouts_plate2_KEYS.csv",
+  well_ids_column = "Key")
+
+plate2_outgrowth <- pivot_longer(plate2_outgrowth, cols = A01:H12, names_to = "Key", values_to = "OD600")
+plate2_washout <- pivot_longer(plate2_washout, cols = A01:H12, names_to = "Key", values_to = "OD600")
+
+#Reformat time
+y <- hms(plate2_outgrowth$`Time`)
+plate2_outgrowth$`Time` <- hour(y) + minute(y) / 60 + second(y) / 360
+
+y <- hms(plate2_washout$`Time`)
+plate2_washout$`Time` <- hour(y) + minute(y) / 60 + second(y) / 360
+
+plate2_washout$Time <- round(plate2_washout$Time + 6.5, digits = 2)
+
+plate2 <- rbind(plate2_outgrowth, plate2_washout)
+
+plate2 <- full_join(plate2, plate2_keys, by = "Key")
+```
+
+
+Experimental Plate, cumate washout:
+
+```{r}
+plate2_cum <- plate2 %>%
+  filter(washout == 'cumate') %>%
+  group_by(Strain, `cumate (mM)`, Time) %>%
+  summarise_at(.vars = "OD600", .funs = c(meanOD = mean, sdOD = sd))
+
+plate2_cum <- filter(.data = plate2_cum, Strain == "TH88" | Strain == "TH99" | Strain == "TH100" | Strain == "TH131")
+
+# Plot both outgrowth and washout together on 1 graph
+
+strain_names <- as_labeller(c(
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH131' = "RelE-RelB"))
+
+plate2_cum$Strain <- factor(plate2_cum$Strain,
+                         levels = c("TH88", "TH99", "TH100", "TH131"))
+
+cumate_vals <- c(0,0.02,0.07,0.1,0.3,0.5)
+discrete_cum <- c("#DBC873", "#C2A464", "#C8B09D", "#AD8E97", "#AC75C1", "#A442C9", "#A442C9")
+plate2_cum$`cumate (mM)`<- as.factor(plate2_cum$`cumate (mM)`)
+
+plate2_cum %>% 
+  ggplot(aes(x = Time, y = meanOD, color = `cumate (mM)` , group = `cumate (mM)`)) +
+  facet_wrap(facets = vars(Strain), labeller = strain_names, nrow = 5, ncol = 6) +
+  geom_rect(xmin=-.3, 
+            xmax=5, 
+            ymin=-.25, 
+            ymax=max(plate2_cum$Time),
+            color = NA,
+            fill = "gray93", 
+            alpha = 0.5) +
+  geom_line(size = 0.5) +  
+  geom_point(size = 1) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.2) +
+  labs(x = 'Time (hrs)', 
+       y = expression('OD'[600]),
+       color = "cumate (mM)\nduring outgrowth",
+       title = "") +
+  scale_x_continuous(limits = c(0,25), breaks = seq(0,25,4)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  # scale_color_manual(values = c("TH88" = "#EC5E8D",
+  #                               "TH99" = "#DAA9ED",
+  #                              "TH100" = "#E0D935",
+  #                              "TH131" = "#F7AB37"),
+  #                    labels = strain_names) +
+  #scale_color_gradient(low = "#DCCC15", 
+  #                     high = "#876493",
+  #                     guide = "legend", 
+  #                     aesthetics = "color", 
+  #                     values = cumate_vals,
+  #                     na.value = NA) +
+  #scale_colour_brewer(palette = "spectral", direction = -1) +
+  scale_color_manual(values=discrete_cum) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        #strip.text.x = element_text(face = "bold", size = 12),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 10),
+        text = element_text(size = 12),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 9),
+        strip.text.x = element_text(size = 12),
+        legend.key.size = unit(0.4, 'cm')
+        )
+```
+
+```{r}
+ggsave(filename = "20220420_TAs_cum_washout_Plate2_ALL_FIG.png", path = "/Users/halvorsen1/Documents/R_graphs/Washouts", width = 10, height = 2.7, units = "in", device='png', dpi=300)
+```
+
+
+Experimental Plate, IPTG washout:
+
+```{r}
+plate2_IPTG <- plate2 %>%
+  filter(washout == 'IPTG') %>%
+  group_by(Strain, `IPTG (mM)`, Time) %>%
+  summarise_at(.vars = "OD600", .funs = c(meanOD = mean, sdOD = sd))
+
+strain_names <- as_labeller(c(
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH131' = "RelE-RelB"))
+
+plate2_IPTG$Strain <- factor(plate2_IPTG$Strain,
+                         levels = c("TH88", "TH99", "TH100", "TH131"))
+
+discrete_IPTG <- c("#A442C9", "#AC75C1", "#AD8E97", "#C8B09D", "#C2A464", "#DBC873")
+plate2_IPTG$`IPTG (mM)`<- as.factor(plate2_IPTG$`IPTG (mM)`)
+
+plate2_IPTG %>% 
+  #filter(`IPTG (mM)` == 0.7) %>%
+  ggplot(aes(x = Time, y = meanOD, color = `IPTG (mM)` , group = `IPTG (mM)`)) +
+  facet_wrap(facets = vars(`Strain`), labeller = strain_names, nrow = 5, ncol = 6) +
+  geom_rect(xmin=-.3, 
+            xmax=5, 
+            ymin=-.25, 
+            ymax=max(plate2$Time),
+            color = NA,
+            fill = "gray93", 
+            alpha = 0.5) +
+  geom_line(size = 0.5) +  
+  #guides(color = "none") +
+  geom_point(size = 1) +
+  #scale_shape_manual(values=c(15, 16, 17, 18, 3, 4, 8)) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.2) +
+  labs(x = 'Time (hrs)', 
+       y = expression('OD'[600]),
+       color = "IPTG (mM)\nduring outgrowth",
+       title = "Experimental plate: IPTG washout with 1 mM cumate addition") +
+  scale_x_continuous(limits = c(0,25), breaks = seq(0,25,4)) +
+  scale_y_continuous(limits = c(0,2), breaks = seq(0,2,0.5)) +
+  #scale_color_gradient(low = "#DCCC15", 
+  #                     high = "#876493",
+  #                     guide = "legend", 
+  #                     aesthetics = "color", 
+  #                     values = cumate_vals,
+  #                     na.value = NA) +
+  #scale_colour_brewer(palette = "spectral", direction = -1) +
+  scale_color_manual(values=discrete_cum) +
+  # scale_color_manual(values = c("TH88" = "#EC5E8D",
+  #                               "TH99" = "#DAA9ED",
+  #                              "TH100" = "#E0D935",
+  #                              "TH131" = "#F7AB37"),
+  #                    labels = strain_names) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        #strip.text.x = element_text(face = "bold", size = 12),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 10),
+        text = element_text(size = 12),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 9),
+        strip.text.x = element_text(size = 12),
+        legend.key.size = unit(0.4, 'cm')
+        )
+```
+
+```{r}
+ggsave(filename = "20220420_TAs_IPTG_washout_Plate2_ALL_FIG.png", path = "/Users/halvorsen1/Documents/R_graphs/Washouts", width = 10, height = 2.7, units = "in", device='png', dpi=300)
+```
+
+# Import Tse/Col data to combine for Fig. 2 (from 02/25/22)
+
+```{r}
+
+outgrowth <- read_csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220224_IPTG_washout_modifiedImmunities_outgrowth.csv"
+)
+
+washout <- read_csv(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220224_IPTG_washout_modifiedImmunities_washout.csv"
+)
+
+keys <- read_plate(
+  "/Users/halvorsen1/Documents/RStudio/csv_files/20220224_IPTG_washout_modifiedImmunities_KEYS.csv",
+  well_ids_column = "Key"
+)
+
+outgrowth <- pivot_longer(outgrowth, cols = A01:E12, names_to = "Key", values_to = "OD600")
+washout <- pivot_longer(washout, cols = A01:E12, names_to = "Key", values_to = "OD600")
+
+outgrowth <- full_join(outgrowth, keys, by = "Key")
+washout <- full_join(washout, keys, by = "Key")
+
+outgrowth <- outgrowth %>%
+  select(-Key, -Replicate, -`cumate (mM)`) %>%
+  group_by(Strain, `IPTG (mM)`, Time) %>%
+  summarise_at(.vars = "OD600", .funs = c(meanOD = mean, sdOD = sd))
+
+washout <- washout %>%
+  select(-Key, -Replicate, -`cumate (mM)`) %>%
+  group_by(Strain, `IPTG (mM)`, Time) %>%
+  summarise_at(.vars = 'OD600', .funs = c(meanOD = mean, sdOD = sd))
+
+#Reformat time
+y <- hms(outgrowth$`Time`)
+outgrowth$`Time` <- hour(y) + minute(y) / 60 + second(y) / 360
+
+y <- hms(washout$`Time`)
+washout$`Time` <- hour(y) + minute(y) / 60 + second(y) / 360
+
+#washout$`IPTG (μM)` <- as.numeric(washout$`IPTG (μM)`)
+washout$Time <- as.numeric(washout$Time)
+
+outgrowth$Time <- round(outgrowth$Time, digits = 2)
+
+washout$Time <- round(washout$Time, digits = 2)
+
+washout2 <- washout
+washout2$Time <- washout2$Time + 6.17
+
+coltse_cum <- rbind(washout2, filter(outgrowth, `Time` != 6.17))
+
+```
+
+
+
+# Plot Both ColTse (2/25/22) and TA systems (4/20/22) on same graph for Fig. 2
+```{r}
+
+plate2_ALL <- rbind(plate2_IPTG, coltse_cum)
+plate2_ALL <- filter(plate2_ALL, Strain != "TH245")
+
+strain_names <- as_labeller(c(
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH131' = "RelE-RelB",
+                  'TH126' = "Tse2-Tsi2",
+                  'TH240' = "Tse2-Tsi2[ssrA]",
+                  'TH128' = "ColE2-ImmE2",
+                  'TH237' = "ColE2-ImmE2[ssrA]"))
+
+
+discrete_IPTG <- c("#A442C9", "#AC75C1", "#AD8E97", "#C8B09D", "#C2A464", "#DBC873")
+plate2_ALL$`IPTG (mM)`<- as.factor(plate2_ALL$`IPTG (mM)`)
+
+
+
+plate2_ALL$Strain <- factor(plate2_ALL$Strain, 
+                            levels = c("TH88",
+                                       "TH99",
+                                       "TH100",
+                                       "TH131",
+                                       "TH126",
+                                       "TH240",
+                                       "TH128",
+                                       "TH237"))
+
+plate2_ALL$Strain <- factor(plate2_ALL$Strain, 
+                            levels = c("TH240",
+                                       "TH237",
+                                       "TH100",
+                                       "TH131",
+                                       "TH126",
+                                       "TH128",
+                                       "TH88",
+                                       "TH99"))
+
+plate2_ALL %>% 
+  #filter(Strain == "TH88" | Strain == "TH99" | Strain == "TH100" | Strain  == "TH131") %>%
+  filter(Strain != "TH88" & Strain != "TH99" & Strain != "TH100" & Strain  != "TH131") %>%
+  ggplot(aes(x = Time, y = meanOD, color = `IPTG (mM)` , group = `IPTG (mM)`)) +
+  facet_wrap(facets = vars(`Strain`), labeller = strain_names, nrow = 2, ncol = 4) +
+  geom_rect(xmin=-.3, 
+            xmax=5, 
+            ymin=-.25, 
+            ymax=max(plate2$Time),
+            color = NA,
+            fill = "gray93", 
+            alpha = 0.5) +
+  geom_line(size = 0.5) +  
+  geom_point(size = 1) +
+  geom_errorbar(aes(ymin = meanOD-sdOD, ymax = meanOD+sdOD), width = 0.2) +
+  labs(x = 'Time (hrs)', 
+       y = expression('OD'[600]),
+       color = "IPTG (mM)\nfor 5 hours",
+       title = "") +
+  scale_x_continuous(limits = c(0,25), breaks = seq(0,25,4)) +
+  scale_y_continuous(limits = c(0,1.7), breaks = seq(0,1.7,0.5)) +
+  #scale_color_gradient(low = "#DCCC15", 
+  #                     high = "#876493",
+  #                     guide = "legend", 
+  #                     aesthetics = "color", 
+  #                     values = cumate_vals,
+  #                     na.value = NA) +
+  #scale_colour_brewer(palette = "spectral", direction = -1) +
+  scale_color_manual(values=discrete_IPTG) +
+  # scale_color_manual(values = c("TH88" = "#EC5E8D",
+  #                               "TH99" = "#DAA9ED",
+  #                              "TH100" = "#E0D935",
+  #                              "TH131" = "#F7AB37"),
+  #                    labels = strain_names) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 12),
+        text = element_text(size = 12),
+        axis.text.x = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        plot.title = element_text(size = 13, color = "black", face = "bold"),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 10),
+        strip.text.x = element_text(size = 14),
+        legend.key.size = unit(0.4, 'cm')
+        )
+
+```
+
+
+```{r}
+ggsave(filename = "20220713_ColTseCircuits_IPTG_Washout.png", path = "/Users/halvorsen1/Documents/R_graphs/Washouts", width = 11, height = 3, units = "in", device='png', dpi=300)
+```
+6 squares = 14x3
+4x2 squares = 11x6 (11.56)

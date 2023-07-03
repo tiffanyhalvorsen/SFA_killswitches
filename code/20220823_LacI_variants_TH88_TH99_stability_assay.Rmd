@@ -1,0 +1,76 @@
+---
+title: "20220823_LacI_TH88_TH99_seq_variants_stability"
+author: "Tiffany Halvorsen"
+date: '2022-08-23'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include = FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(knitr)
+```
+
+```{r}
+LacI_fix <- read_csv(
+  file = "/Users/halvorsen1/Documents/RStudio/csv_files/20220819_Stability_CcdB_HicA_LacI_fixed.csv")
+
+LacI_avgs <- LacI_fix %>%
+  group_by(Strain, Time) %>%
+  summarise(mean = mean(Escape_freq),
+            sd = sd(Escape_freq))
+```
+
+```{r}
+strain_names3 <- as_labeller(c("TH88" = "CcdB-CcdA\nLacI TGGC TGGC TGGC",
+                               "TH254" = "CcdB-CcdA\n LacI TAGC ACCA TGGC",
+                               "TH99" = "HicA-HicB\n LacI TGGC TGGC TGGC",
+                               "TH255" = "HicA-HicB\n LacI TAGC ACCA TGGC"))
+LacI_fix$Replicate <- as.factor(LacI_fix$Replicate)
+LacI_fix$Strain <- factor(LacI_fix$Strain,
+                          levels = c("TH88", "TH254", "TH99", "TH255"))
+LacI_avgs$Strain <- factor(LacI_avgs$Strain,
+                          levels = c("TH88", "TH254", "TH99", "TH255"))
+
+LacI_fix$Time <- as.numeric(LacI_fix$Time)
+
+LacI_fix %>%
+  ggplot() +
+  facet_wrap(~ Strain, labeller = strain_names3, ncol = 2) +
+  geom_point(aes(x = Time, y = log10(Escape_freq), color = Strain, shape = Replicate), size = 2) +
+  geom_line(aes(x = Time, y = log10(Escape_freq), color = Strain, shape = Replicate), size = 1) +
+  #geom_smooth(span = 3, method = loess, aes(x=Time, y=log10(Escape_freq), color=Strain)) +
+  geom_line(data = LacI_avgs, mapping= aes(x = Time, y = log10(mean), color = Strain), size = 3, alpha = 0.5) +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,9), breaks = c(1,3,6,9)) +
+  scale_color_manual(values = c("TH88" = "#EC5E8D",
+                                "TH99" = "purple",
+                                "TH254" = "#EC5E8D",
+                                "TH255" = "purple"
+                                )) +  
+  geom_hline(yintercept = 0) +
+  labs(x = "Time (days)",
+       y=expression('log'[10]*' survival ratio')) +
+  theme(
+        strip.background = element_blank(),
+        panel.grid.major.y = element_line(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 14),
+        axis.text = element_text(size = 15), 
+        #strip.text = element_text(size = 8, vjust = -2, hjust = 0.5),
+        strip.text = element_text(size = 11, vjust = -0.05, hjust= 0.5),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 15, vjust = 0.5),
+        axis.title = element_text(size = 18)
+  )
+
+```
+```{r, include = FALSE}
+ggsave(filename = "20220829_LacI_variants_CcdB_HicA_stability_90gen_2.png", path = "/Users/halvorsen1/Documents/R_graphs/Escape_mutants", width = 6.5, height = 6, units = "in", device='png', dpi=300)
+```

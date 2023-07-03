@@ -1,0 +1,844 @@
+---
+title: "Kill switch escape frequencies"
+output:
+  pdf_document: default
+  pdf_notebook: default
+---
+
+```{r echo=FALSE}
+library(ggplot2)
+library(dplyr)
+library(plater)
+library(tidyverse)
+library(lubridate) #hms function
+library(reshape2)
+library(lemon)
+library(gt) #formating tables
+```
+
+```{r echo=FALSE}
+frequencies <- read_csv(
+  "/Users/halvorsen1/SFA_killswitches/data/escape/20220204_escapeFrequencies_permIPTG_triplicate.csv"
+)
+
+std <- function(x) sd(x)/sqrt(length(x))
+
+averages <- frequencies %>% 
+  group_by(Strain) %>%
+  summarize_at(.vars = vars(Escape_freq), .funs = c(mean_freq = mean, std_freq = std))
+
+averages$Strain <-factor(averages$Strain,
+                  levels = c("TH86", "TH88", "TH99", "TH100", "TH100_noIPTG", "TH131", "TH131_noIPTG", "TH126","TH179", "TH128", "TH177", "TH124", "TH203"))
+
+strain_names <- as_labeller(c('TH37' = "wild type",
+                  'TH86' = "regulators only",
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH98' = "EcoRI (no methylase)",
+                  'TH100' = "ParE-ParD",
+                  'TH100_noIPTG' = "ParE-ParD**",
+                  'TH124' = "EcoRI\nno methylase",
+                  'TH125' = "RalR-RalA",
+                  'TH126' = "Tse2-Tsi2",
+                  'TH127' = "colicin E1-ImmE1",
+                  'TH128' = "colicin E2\nImmE2",
+                  'TH131' = "RelE-RelB",
+                  'TH131_noIPTG' = "RelE-RelB**",
+                  'TH106' = "ColE1-ImmE1 in E. coli",
+                  'TH107' = "ColE2-ImmE2 in E. coli",
+                  'TH108' = "RalR-RalA in E. coli",
+                  'TH109' = "Tse2-Tsi2 in E. coli",
+                  'TH177' = "colE2-Imm-ssrA[-ILV]",
+                  'TH179' = "tse2-tsi2\nssrA[-ILV]",
+                  "TH203" = "TisB (no antitoxin)",
+                  "TH240" = "Tse-Tsi2\nssrA[AAV]",
+                  "TH237" = "ColE2-ImmE2\nssrA[AAV]",
+                  "TH245" = "ColE2-ImmE2\n[YY54-55AA\nD51A]"
+                  ))
+
+averages %>%
+  ggplot(aes(x = Strain, y = mean_freq, fill = Strain)) +
+  geom_col(aes(x = Strain, y = mean_freq, fill = Strain)) +
+  labs( y="survival ratio") +
+  geom_errorbar(aes(ymin = mean_freq-std_freq, ymax = mean_freq+std_freq), width = 0.4) +
+  scale_fill_manual(values = c("TH86" = "gray",
+                                "TH88" = "#EC5E8D",
+                                "TH99" = "#D7A3EC",
+                                "TH100" = "#E0D935",
+                                "TH100_noIPTG" = "#E0D935",
+                                "TH131" = "#F7AB37",
+                                "TH131_noIPTG" = "#F7AB37",
+                                "TH86" = "gray",
+                                "TH126" = "#36D81C",
+                                "TH179" = "#4BFC2E",
+                                "TH128" = "#4796F5",
+                                "TH177" = "#6CA7EE",
+                                "TH98" = "#057C8B",
+                                "TH124" = "#30ECEC",
+                                "TH203" = "#D4BFDB"),
+                     labels = strain_names) +
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  scale_x_discrete(labels = strain_names) +
+  geom_vline(xintercept = c(9.5), size = 0.3) +
+  geom_hline(yintercept = 1, color = "black") +
+  #geom_text(aes(label = mean_freq), vjust = -0.5) +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(face = "bold", size = 12),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(angle = 70, size = 15, vjust = 0.5),
+        axis.title.x = element_blank())
+
+```
+
+
+```{r echo=FALSE}
+ggsave(filename = "20220210_EscapeFrequencies_triplicate.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 6.5, height = 4, units = "in", device='png', dpi=300)
+```
+
+Create graph of mutation occurances for poster
+
+```{r echo=FALSE} 
+# dual_1 data set includes TH100* and TH131* selected for escape after being grown withOUT 1 mM IPTG
+# in overnight cultures. Also includes pTH48-TisB and pTH48-EcoRI without their inactivators
+
+# UPDATED 3/25/22 WITH ADDITIONAL Ccdb, HicA and ColE2 mutants
+# UPDATED on 4/19/22 - Only mutant missing now is pTH131*-7.
+
+all_circuits <- data.frame(Locus = c("LacI", 
+                               "Toxin\nPromoter", 
+                               "Toxin", 
+                               "Ori", 
+                               "LacO", 
+                               "Deletion of\nEntire Insert"),
+                               Percent_of_mutations = as.integer(c(
+                                 "33.3", 
+                                 "23.3", 
+                                 "30", 
+                                 "5", 
+                                 "6.7", 
+                                 "1.7")))
+
+all_circuits %>%
+  ggplot(aes(x = Locus, y = Percent_of_mutations)) +
+  geom_col(aes(fill = Locus)) +
+  #geom_text(aes(label = Percent_of_mutations), vjust = -0.5) +
+  labs( y="Percent of all observed mutations\n(7/circuit, dual + single)",
+        x = "site of mutation"
+        #title = "Escape mutants of single toxin circuits: EcoRI and TisB"
+        ) +
+  scale_y_continuous(limits = c(0,40)) +
+  scale_fill_manual(values = c("LacI" = "#DECF20",
+                                "Toxin\nPromoter" = "#9887B4",
+                                "Toxin" = "#45296D",
+                                "Rep" = "Black",
+                                "Ori" = "Black", 
+                                "LacO" = "#D1CA71",
+                                "other" = "gray")) +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(face = "bold", size = 12),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 16),
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 16),
+        axis.title.y = element_text(size = 16))
+
+
+```
+
+```{r echo=FALSE}
+ggsave(filename = "20220419_escapeMutantLocations_all.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 6.5, height = 4.5, units = "in", device='png', dpi=300)
+```
+
+Individual circuit escapes updated 4/3/22: percent of mutations is now the percent of circuits with the observed mutations in each category (ex: ori mutants
+co-occur with EcoRI mutants in 3/10 mutants but all circuits carry mutations in EcoRI, so 33% have ori mutations but 100% have EcoRI mutations)
+
+```{r echo=FALSE}
+
+all_mutants <- read_csv(file = "/Users/halvorsen1/SFA_killswitches/data/escape/20220419_EscapeModes_all.csv")
+
+all_mutants$Toxin_circuit <-factor(all_mutants$Toxin_circuit,
+                  levels = c("CcdB-CcdA", "HicA-HicB", "ParE-ParD", "RelE-RelB", "Tse2-Tsi2", "ColE2-ImmE2", "EcoRI (no methylase)", "TisB (no antitoxin)"))
+
+
+# Graph circuits dual and single aggregated into one chart
+
+all_mutants %>%
+  filter(Toxin_circuit != "EcoRI (no methylase)" & Toxin_circuit != "TisB (no antitoxin)") %>%
+  ggplot() +
+  geom_col(aes(x = Locus, y = Mode_Number, fill = Mode)) +
+  #facet_rep_wrap(~Toxin_circuit, nrow = 2, ncol = 4) +
+  #geom_text(aes(x = Locus, y = Number_of_mutants, label = Number_of_mutants), vjust = -0.1, size = 3) +
+  labs( y="Number of sequenced escapees\nwith mutation (7/circuit)",
+        x = "site of mutation") +
+  # scale_fill_manual(values = c("Deletion" = "#9887B4",
+  #                               "Duplication" = "#DECF20",
+  #                               "Point mutation" = "#45296D",
+  #                               #"Rep" = "Black",
+  #                               "Single nucleotide insertion" = "grey")) +
+  scale_fill_manual(values = c("Deletion" = "#ffa600",
+                                "Duplication" = "#ef5675",
+                                "Point mutation" = "#7a5195",
+                                #"Rep" = "Black",
+                                "Indel" = "#003f5c")) +
+  scale_x_discrete(labels = c("LacI" = "LacI",
+                               "Toxin Promoter" = "Toxin\nPromoter",
+                               "Entire Insert" = "Entire\nInsert",
+                               "Ori" = "Ori")) +
+  theme_bw() +
+  theme(text = element_text(size = 12),
+        panel.spacing.y = unit(-1.2, "cm"),
+        panel.border = element_blank(),
+        axis.line = element_line(color = "black"),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        #axis.text = element_text(size = 8), 
+        strip.text = element_text(size = 12),
+        legend.position = "right",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 9, angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 11)
+  )
+
+```
+
+Width for all dual circuits should be 14 (by 3)
+Width for just EcoRI and TisB should be 5
+
+```{r echo=FALSE}
+ggsave(filename = "20220419_escapeMutantLocations&Modes_DualToxins.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 5, height = 3, units = "in", device='png', dpi=300)
+```
+
+
+```{r echo=FALSE}
+# Graph as facet with all circuits together
+
+#Deletion old purple color #9887B4
+#Point mutation old purple color #45296D
+
+all_mutants %>%
+  #filter(Toxin_circuit == "EcoRI (no methylase)" | Toxin_circuit == "TisB (no antitoxin)") %>%
+  ggplot() +
+  geom_col(aes(x = Locus, y = Mode_Number, fill = Mode)) +
+  facet_rep_wrap(~Toxin_circuit, nrow = 2, ncol = 4) +
+  geom_text(aes(x = Locus, y = Number_of_mutants, label = Number_of_mutants), vjust = -0.1, size = 3) +
+  labs( y="Number of sequenced escapees\nwith mutation (7/circuit)",
+         x = "site of mutation") +
+  #scale_fill_viridis_d(begin = 1, end = 0) +
+  scale_fill_manual(values = c("Deletion" = "#ffa600",
+                                "Duplication" = "#ef5675",
+                                "Point mutation" = "#7a5195",
+                                #"Rep" = "Black",
+                                "Indel" = "#003f5c")) +
+  scale_x_discrete(labels = c("LacI" = "LacI",
+                               "Toxin Promoter" = "Toxin\nPromoter",
+                               "Entire Insert" = "Entire\nInsert",
+                               "Ori" = "Ori")) +
+  scale_y_continuous(limits = c(0,8)) +
+  theme_bw() +
+  theme(text = element_text(size = 12),
+        panel.spacing.y = unit(-1.4, "cm"),
+        panel.border = element_blank(),
+        axis.line = element_line(color = "black"),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        #axis.text = element_text(size = 8), 
+        strip.text = element_text(size = 12),
+        legend.position = "right",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 9, angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 11)
+  )
+
+```
+```{r echo=FALSE}
+ggsave(filename = "20220419_escape_figure_all.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 10.5, height = 4, units = "in", device='png', dpi=300)
+```
+
+# Update as of 06 09 2022
+## Sequenced ssrA escapes and found all mutations in LacI for both colicin and Tse2
+## Re-organized data file so it would be easier to work with.
+
+
+```{r echo=FALSE}
+# Re-make graphs with new file
+
+modes <- read_csv("/Users/halvorsen1/SFA_killswitches/data/escape/20220114_EscapeModes.csv")
+
+modes_dual <- modes %>%
+  filter(Type != "No inactivator")
+  #filter(Circuit != "Col-ImmE2" & Circuit != "Tse2-Tsi2" & Circuit != "Col-ImmE2(ssrA)" & Circuit != "Tse2-Tsi2(ssrA)")
+
+strain_names2 <- as_labeller(c(
+                  'CcdB-CcdA' = "CcdB-CcdA",
+                  'HicA-HicB' = "HicA-HicB",
+                  'ParE-ParD' = "ParE-ParD",
+                  'Tse2-Tsi2' = "Tse2-Tsi2",
+                  'Col-ImmE2' = "colicin\nImmE2",
+                  'RelE-RelB' = "RelE-RelB",
+                  "Tse2-Tsi2(ssrA)" = "Tse2-Tsi2\n(ssrA)",
+                  "Col-ImmE2(ssrA)" = "Col-ImmE2\n(ssrA)",
+                  "EcoRI (no methylase)" = "EcoRI\n(no methylase)",
+                  "TisB (no antitoxin)" = "TisB\n(no antitoxin)"
+                  ))
+
+modes$Circuit <- factor(modes$Circuit, levels = c("CcdB-CcdA", "HicA-HicB",
+                                                  "ParE-ParD", "RelE-RelB",
+                                                  "EcoRI (no methylase)", "TisB (no antitoxin)",
+                                                  "Tse2-Tsi2", "Tse2-Tsi2(ssrA)",
+                                                  "Col-ImmE2", "Col-ImmE2(ssrA)"
+                                                  ))
+
+modes$Type <- factor(modes$Type,
+                     levels = c('with inactivator',
+                                'no inactivator'))
+
+modes_dual$System <- factor(modes_dual$System,
+                     levels = c('Type II TA System',
+                                'Exotoxin-immunity System'))
+
+modes_dual %>%
+  #filter(Circuit == "Col-ImmE2" | Circuit == "Tse2-Tsi2" | Circuit == "Tse2-Tsi2(ssrA)" | Circuit == "Col-ImmE2(ssrA)") %>%
+  #filter(Circuit == "TisB (no antitoxin)" | Circuit == "EcoRI (no methylase)") %>%
+  #filter(System == "Type II TA System") %>%
+  ggplot() +
+  geom_bar(aes(y=Locus, fill=Mode), stat = "count") +
+  facet_wrap(~ System, nrow = 1, ncol = 15) + 
+  labs( y="Locus with mutation",
+        x = "Number of observed mutations") +
+  scale_fill_viridis_d(begin = 1, end = 0.3) +
+  # scale_fill_manual(values = c("SNP" = "#35608D",
+  #                               "Insertion" = "#238A8D",
+  #                               "Indel" = "#77CEAA",
+  #                               "Duplication" = "#8AD548",
+  #                               "Deletion" = "#FDE725")) +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        strip.text = element_text(size = 14),
+        legend.position = "right",
+        legend.title = element_text(size = 15),
+        axis.text = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 16),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.key.size = unit(1, 'cm'),
+        legend.text = element_text(size = 14))
+
+```
+```{r echo=FALSE}
+ggsave(filename = "20220419_escapeMutantLocations&Modes_Dual.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 11, height = 3, units = "in", device='png', dpi=300)
+```
+Long: 14 x 2.5
+```{r echo=FALSE}
+# Graph mutations according to mechanism
+
+escape_mechanisms <- data.frame(Type = c("Duplication", 
+                               "Single nucleotide\nInsertion", 
+                               "Deletion", 
+                               "Point mutation"),
+                               Percent = as.integer(c(
+                                 "26.2", 
+                                 "9.8", 
+                                 "39.3", 
+                                 "24.6")))
+
+escape_mechanisms$Type <- factor(escape_mechanisms$Type,
+                                levels = c("Deletion",
+                                           "Duplication",
+                                           "Point mutation",
+                                           "Single nucleotide\nInsertion"))
+
+escape_mechanisms %>%
+  ggplot(aes(x = Type, y = Percent)) +
+  geom_col(aes(fill = Type)) +
+  #geom_text(aes(label = Percent), vjust = -0.5) +
+  labs( y="Percent of all observed mutations",
+        x = "site of mutation",
+        title = "Drivers of escape") +
+  scale_y_continuous(limits = c(0,50)) +
+  scale_fill_grey()+
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(face = "bold", size = 12),
+        legend.position = "none",
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 12),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 14))
+```
+
+
+
+Graph modes of mutation by target sequence
+
+```{r echo=FALSE}
+
+modes_all <- read_csv("/Users/halvorsen1/SFA_killswitches/data/escape/20220419_MutationModes_aggregated_byTarget.csv"
+)
+
+relabeled <- c("LacI" = "LacI",
+               "Pcym" = "Pcym",
+               "Toxin" = "Toxin",
+               "LacO" = "LacO",
+               "Entire circuit" = "Entire\ncircuit",
+               "Ori" = "Ori")
+
+
+modes_all %>%
+  ggplot(aes(x = Mode, y = Mode_Number, fill = Target_sequence)) +
+  geom_bar(stat = "identity") +
+  #geom_text(aes(label = Percent), vjust = -0.5) +
+  labs( y="Number of mutations across all circuits",
+        x = relabeled,
+        title = "Drivers of escape") +
+  #scale_y_continuous(limits = c(0,50)) +
+  scale_fill_manual(values = c("LacI" = "#DECF20",
+                                "Toxin Promoter" = "#9887B4",
+                                "Toxin" = "#45296D",
+                                #"Rep" = "Black",
+                                #"Ori" = "Black", 
+                                "Inactivator Promoter" = "#D1CA71"),
+                    labels = relabeled) +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(face = "bold", size = 12),
+        legend.position = "right",
+        legend.title = element_text(size = 15),
+        axis.text.x = element_text(size = 14),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 14),
+        legend.key.size = unit(1, 'cm'),
+        legend.text = element_text(size = 12))
+```
+```{r echo=FALSE}
+ggsave(filename = "20220419_mechanisms_of_escape_byTarget.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 7, height = 4, units = "in", device='png', dpi=300)
+```
+
+Escape frequencies of modified immunity strains relative to WT (Tse/colicin E2)
+
+Only counted the large colonies that were visible after 24 hrs of growth at 30C
+
+```{r echo=FALSE}
+frequencies <- read_csv(
+  "/Users/halvorsen1/SFA_killswitches/data/escape/20220224_escapefrequencies_modifiedImmunities_IPTGtest.csv"
+)
+
+std <- function(x) sd(x)/sqrt(length(x))
+
+averages <- frequencies %>% 
+  group_by(Strain, IPTG) %>%
+  summarize_at(.vars = vars(Escape_freq), .funs = c(mean_freq = mean, std_freq = std))
+
+averages$Strain <-factor(averages$Strain,
+                  levels = c("TH126", "TH240", "TH128", "TH237", "TH245"))
+
+averages %>%
+  ggplot(aes(x = IPTG, y = mean_freq, fill = Strain)) +
+  geom_col() +
+  facet_grid(~ Strain, space = "free_x", scales = "free_x", switch="x", labeller = strain_names) +
+  labs(y="survival ratio",
+       x = "IPTG",
+       tag = "IPTG:") +
+  geom_errorbar(aes(ymin = mean_freq-std_freq, ymax = mean_freq+std_freq), width = 0.4) +
+  scale_fill_discrete(labels = strain_names) +
+  # scale_fill_manual(values = c("TH86" = "gray",
+  #                               "TH88" = "#EC5E8D",
+  #                               "TH99" = "#D7A3EC",
+  #                               "TH100" = "#E0D935",
+  #                               "TH100_noIPTG" = "#E0D935",
+  #                               "TH131" = "#F7AB37",
+  #                               "TH131_noIPTG" = "#F7AB37",
+  #                               "TH86" = "gray",
+  #                               "TH126" = "#36D81C",
+  #                               "TH179" = "#4BFC2E",
+  #                               "TH128" = "#4796F5",
+  #                               "TH177" = "#6CA7EE",
+  #                               "TH98" = "#057C8B",
+  #                               "TH124" = "#30ECEC",
+  #                               "TH203" = "#D4BFDB"),
+  #                    labels = strain_names) +
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  #geom_vline(xintercept = c(9.5), size = 0.3) +
+  geom_hline(yintercept = 1, color = "black") +
+  coord_cartesian(ylim = c(0.0000001, 1), clip = "off") +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        strip.placement = "outisde",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.spacing.x = unit(0,"line"),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(face = "bold", size = 12),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 13, vjust = 0.5),
+        axis.title.x = element_blank(),
+        plot.tag.position = c(0.05,0.17))
+
+
+```
+```{r echo=FALSE}
+ggsave(filename = "20220224_altered_immunities_escape_frequencies.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 6, height = 4, units = "in", device='png', dpi=300)
+```
+
+I re-measured escape frequency from the CFU images on large plates from 2022 03 23 (replicate #1 is 3/23) - these cultures were grown IN IPTG overnight PRIOR to plating on 
+IPTG for the permissive condition and cumate for the non-permissive condition. The IPTG treatment is meant to serve as a growth normalization for each culture - 1 mM IPTG doesn't seem to cause a growth defect between strains, so it seems like a valid growth normalization.
+
+```{r echo=FALSE}
+frequencies_IPTG <- read_csv(
+  "/Users/halvorsen1/SFA_killswitches/data/escape/20220323_escape_Freqencies_permIPTG_IPTGpreculture.csv"
+)
+
+# std <- function(x) sd(x)/sqrt(length(x))
+# 
+# averages <- frequencies %>% 
+#   group_by(Strain) %>%
+#   summarize_at(.vars = vars(Escape_freq), .funs = c(mean_freq = mean, std_freq = std))
+
+frequencies_IPTG$Strain <-factor(frequencies_IPTG$Strain,
+                  levels = c("TH86", "TH88", "TH99", "TH100", "TH131", "TH126", "TH128", "TH98","TH124", "TH214", "TH203"))
+
+strain_names <- as_labeller(c('TH37' = "wild type",
+                  'TH86' = "regulators only",
+                  'TH88' = "CcdB-CcdA",
+                  'TH99' = "HicA-HicB",
+                  'TH100' = "ParE-ParD",
+                  'TH100_noIPTG' = "ParE-ParD**",
+                  'TH124' = "EcoRI\nno methylase",
+                  'TH125' = "RalR-RalA",
+                  'TH126' = "Tse2-Tsi2",
+                  'TH127' = "colicin E1-ImmE1",
+                  'TH128' = "colicin E2\nImmE2",
+                  'TH131' = "RelE-RelB",
+                  'TH131_noIPTG' = "RelE-RelB**",
+                  'TH106' = "ColE1-ImmE1 in E. coli",
+                  'TH107' = "ColE2-ImmE2 in E. coli",
+                  'TH108' = "RalR-RalA in E. coli",
+                  'TH109' = "Tse2-Tsi2 in E. coli",
+                  'TH177' = "colE2-Imm-ssrA[-ILV]",
+                  'TH179' = "tse2-tsi2\nssrA[-ILV]",
+                  "TH203" = "TisB\nno antitoxin",
+                  "TH240" = "Tse-Tsi2\nssrA[AAV]",
+                  "TH237" = "ColE2-ImmE2\nssrA[AAV]",
+                  "TH245" = "ColE2-ImmE2\n[YY54-55AA\nD51A]",
+                  "TH213" = "TisB-IstR",
+                  "89" = "EcoRI-EcoRIM"
+                  ))
+
+frequencies_IPTG %>%
+  ggplot(aes(x = Strain, y = Escape_freq, fill = Strain)) +
+  geom_col(aes(x = Strain, y = Escape_freq, fill = Strain)) +
+  labs( y="survival ratio") +
+  #geom_errorbar(aes(ymin = mean_freq-std_freq, ymax = mean_freq+std_freq), width = 0.4) +
+  scale_fill_manual(values = c("TH86" = "gray",
+                                "TH88" = "#EC5E8D",
+                                "TH99" = "#D7A3EC",
+                                "TH100" = "#E0D935",
+                                "TH131" = "#F7AB37",
+                                "TH126" = "#36D81C",
+                                "TH128" = "#4796F5",
+                                "TH98" = "#057C8B",
+                                "TH124" = "#30ECEC",
+                                "TH203" = "#D4BFDB",
+                                "TH213" = "#D4BFDB"),
+                     labels = strain_names) +
+  coord_flip() +
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  scale_x_discrete(labels = strain_names) +
+  geom_vline(xintercept = c(9.5, 7.5, 5.5), size = 0.3) +
+  geom_hline(yintercept = 1, color = "black") +
+  #geom_text(aes(label = mean_freq), vjust = -0.5) +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 11),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(face = "bold", size = 12),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(angle = 70, size = 15, vjust = 0.5),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.y.left = element_blank())
+
+```
+```{r echo=FALSE}
+ggsave(filename = "20220323_escapeFrequencies_IPTG.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 3, height = 4, units = "in", device='png', dpi=300)
+```
+
+
+# Make a table of mutations for supplemental
+
+```{r echo=FALSE}
+library(webshot)
+modes <- read_csv("/Users/halvorsen1/SFA_killswitches/data/escape/20220114_EscapeModes.csv")
+n = 0
+c_col = c("#1e3048", "#274060", "#2f5375", "#4073a0", "#5088b9")
+c_col_light_blue = c("#edf2fb", "#e2eafc", "#d7e3fc", "#ccdbfd", "#c1d3fe")
+c_container_width = px(800)
+c_table_width = px(650)
+c_rn = 30
+c_save = TRUE
+c_format = "png"
+
+modes$Circuit <- factor(modes$Circuit,
+                        levels = c("CcdB-CcdA",
+                                   "HicA-HicB",
+                                   "ParE-ParD",
+                                   "RelE-RelB",
+                                   "Col-ImmE2",
+                                   "Tse2-Tsi2",
+                                   "Col-ImmE2(ssrA)",
+                                   "Tse2-Tsi2(ssrA)",
+                                   "EcoRI (no methylase)",
+                                   "TisB (no antitoxin)"))
+mutant_table <- modes %>%
+  filter(Circuit == "CcdB-CcdA" | Circuit == "HicA-HicB" | Circuit == "ParE-ParD") %>%
+  select(-Type) %>%
+  arrange(`Mutant number`) %>%
+  gt(
+    groupname_col = "Circuit",
+    rowname_col = "Mutant number"
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = c("Locus", "Mode", "Consequence", "Mechanism")
+  ) %>%
+  tab_header(
+    title = md("**Table S4. cont'd**")
+  ) %>%
+  cols_width(
+    c(`Mutant number`) ~ px(150)
+  ) %>%
+  opt_row_striping() %>%
+  tab_options(
+  table.font.name = "Arial",
+  table.font.color = c_col[1],
+  table.border.top.style = "none",
+  table.border.bottom.style = "solid",
+  table.border.bottom.color = c_col[2],
+  table.border.bottom.width = px(3),
+  column_labels.border.top.color = "black",
+  column_labels.border.top.width = px(3),
+  column_labels.border.bottom.color = c_col[2],
+  column_labels.border.bottom.width = px(3),
+  data_row.padding = px(10)
+ ) %>%
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")),
+    locations = cells_row_groups()
+  ) %>%
+  tab_style(
+    style = list(
+      align = "left"),
+    locations = list(
+      cells_title()
+      )
+  ) %>%
+    cols_align(align = c("left"),
+               columns = "Mechanism") %>%
+  opt_align_table_header(align = "left")
+
+gt::gtsave(mutant_table, filename = "20220708_TableS4_Escapes_1.png", path = "/Users/halvorsen1/SFA_killswitches/results/tables")
+
+mutant_table <- modes %>%
+  filter(Circuit == "RelE-RelB" | Circuit == "Col-ImmE2" | Circuit == "Tse2-Tsi2") %>%
+  select(-Type) %>%
+  arrange(`Mutant number`) %>%
+  gt(
+    groupname_col = "Circuit",
+    rowname_col = "Mutant number"
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = c("Locus", "Mode", "Consequence", "Mechanism")
+  ) %>%
+  tab_header(
+    title = md("**Table S4. cont'd**")
+  ) %>%
+  cols_width(
+    c(`Mutant number`) ~ px(150)
+  ) %>%
+  opt_row_striping() %>%
+  tab_options(
+  table.font.name = "Arial",
+  table.font.color = c_col[1],
+  table.border.top.style = "none",
+  table.border.bottom.style = "solid",
+  table.border.bottom.color = c_col[2],
+  table.border.bottom.width = px(3),
+  column_labels.border.top.color = "black",
+  column_labels.border.top.width = px(3),
+  column_labels.border.bottom.color = c_col[2],
+  column_labels.border.bottom.width = px(3),
+  data_row.padding = px(10)
+ ) %>%
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")),
+    locations = cells_row_groups()
+  ) %>%
+  tab_style(
+    style = list(
+      align = "left"),
+    locations = list(
+      cells_title()
+      )
+  ) %>%
+    cols_align(align = c("left"),
+               columns = "Mechanism") %>%
+  opt_align_table_header(align = "left")
+
+gt::gtsave(mutant_table, filename = "20220708_TableS4_Escapes_2.png", path = "/Users/halvorsen1/SFA_killswitches/results/tables")
+
+
+mutant_table <- modes %>%
+  filter(Circuit == "Col-ImmE2(ssrA)" | Circuit == "Tse2-Tsi2(ssrA)") %>%
+  select(-Type) %>%
+  arrange(`Mutant number`) %>%
+  gt(
+    groupname_col = "Circuit",
+    rowname_col = "Mutant number"
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = c("Locus", "Mode", "Consequence", "Mechanism")
+  ) %>%
+  tab_header(
+    title = md("**Table S4. cont'd**")
+  ) %>%
+  cols_width(
+    c(`Mutant number`) ~ px(150)
+  ) %>%
+  opt_row_striping() %>%
+  tab_options(
+  table.font.name = "Arial",
+  table.font.color = c_col[1],
+  table.border.top.style = "none",
+  table.border.bottom.style = "solid",
+  table.border.bottom.color = c_col[2],
+  table.border.bottom.width = px(3),
+  column_labels.border.top.color = "black",
+  column_labels.border.top.width = px(3),
+  column_labels.border.bottom.color = c_col[2],
+  column_labels.border.bottom.width = px(3),
+  data_row.padding = px(10)
+ ) %>%
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")),
+    locations = cells_row_groups()
+  ) %>%
+  tab_style(
+    style = list(
+      align = "left"),
+    locations = list(
+      cells_title()
+      )
+  ) %>%
+    cols_align(align = c("left"),
+               columns = "Mechanism") %>%
+  opt_align_table_header(align = "left")
+
+gt::gtsave(mutant_table, filename = "20220708_TableS4_Escapes_3.png", path = "/Users/halvorsen1/SFA_killswitches/results/tables")
+
+
+mutant_table <- modes %>%
+  filter(Circuit == "EcoRI (no methylase)" | Circuit == "TisB (no antitoxin)") %>%
+  select(-Type) %>%
+  arrange(`Mutant number`) %>%
+  gt(
+    groupname_col = "Circuit",
+    rowname_col = "Mutant number"
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = c("Locus", "Mode", "Consequence", "Mechanism")
+  ) %>%
+  tab_header(
+    title = md("**Table S4. cont'd**")
+  ) %>%
+  cols_width(
+    c(`Mutant number`) ~ px(150)
+  ) %>%
+  opt_row_striping() %>%
+  tab_options(
+  table.font.name = "Arial",
+  table.font.color = c_col[1],
+  table.border.top.style = "none",
+  table.border.bottom.style = "solid",
+  table.border.bottom.color = c_col[2],
+  table.border.bottom.width = px(3),
+  column_labels.border.top.color = "black",
+  column_labels.border.top.width = px(3),
+  column_labels.border.bottom.color = c_col[2],
+  column_labels.border.bottom.width = px(3),
+  data_row.padding = px(10)
+ ) %>%
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")),
+    locations = cells_row_groups()
+  ) %>%
+  tab_style(
+    style = list(
+      align = "left"),
+    locations = list(
+      cells_title()
+      )
+  ) %>%
+    cols_align(align = c("left"),
+               columns = "Mechanism") %>%
+  opt_align_table_header(align = "left")
+
+gt::gtsave(mutant_table, filename = "20220708_TableS4_Escapes_4.png", path = "/Users/halvorsen1/SFA_killswitches/results/tables")
+  
+
+```

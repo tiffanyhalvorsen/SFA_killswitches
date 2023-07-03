@@ -1,0 +1,593 @@
+---
+title: "Escape mutant seletions on M9 minimal media with alt. carbon sources"
+output: pdf_document
+---
+
+Each carbon source at 20 mM
+Strains were grown for 24 hrs approx. in first round and 20 hrs approx. in 2nd
+round
+
+Overnight cultures were grown in 250 uL in 96 deep well plates in Kan20 and 1 mM IPTG
+
+Densities of cultures were not normalized before plating, so may differ in the IPTG condition
+
+```{r echo=FALSE}
+library(car)
+library(ggplot2)
+library(dplyr)
+library(plater)
+library(tidyverse)
+library(lubridate) #hms function
+library(reshape2)
+library(ggpubr) #pvalues on ggplpots
+library(broom)
+library(AICcmodavg)
+```
+
+```{r echo=FALSE}
+CFUs_1 <- read.csv(file = "/Users/halvorsen1/SFA_killswitches/data/escape/20220425_Escapes_MM_all_2_reps.csv")
+CFUs_2 <- read.csv(file = "/Users/halvorsen1/SFA_killswitches/data/escape/20220429_Escapes_MM_all_2more_reps.csv")
+
+CFUs_MM <- rbind(CFUs_1, CFUs_2[-9])
+
+std <- function(x) sd(x)/sqrt(length(x))
+
+CFUs_TH86 <- read.csv(file = "/Users/halvorsen1/SFA_killswitches/data/escape/20220420_EscapeFrequencies_SBW25_HST01_IPTG+-.csv")
+CFUs_TH86 <-  CFUs_TH86 %>%
+  filter(Strain == 'TH86' & Pre_growth == 'IPTG+') %>%
+  select(Strain, CFU_perm, CFU_nonperm, Escape_freq, Replicate)
+
+# NORMALIZE COLUMNS TO COMBINE LB AND MM DATASETS FOR PLOTTING INDIVIDUAL DATA POINTS
+CFUs_TH86$Media <- 'LB'
+
+CFUs_MM <- CFUs_MM %>%
+  select(Strain, CFU_perm, CFU_nonperm, Escape_freq, Media, Replicate)
+
+CFU_MM_merge <- rbind(CFUs_TH86, CFUs_MM)
+
+# ADD IN ssrA TAGGED CIRCUITS
+
+ColTse_Esc_MM <- read_csv(
+  "/Users/halvorsen1/SFA_killswitches/data/escape/20220520_ColTse_plusMutants_MinimalMedia_EscapeFrequencies_+IPTG.csv"
+)
+
+ColTse_Esc_MM <- ColTse_Esc_MM %>%
+  filter(Strain == "TH237" | Strain == "TH240")
+ColTse_Esc_MM <- ColTse_Esc_MM %>%
+  select(Strain, CFU_perm, CFU_nonperm, Escape_freq, Replicate, Media) 
+
+ColTse_Esc_LB <- read.csv(file = "/Users/halvorsen1/SFA_killswitches/data/escape/20220516_ColTse_plusMutants_EscapeFrequencies_precultureIPTG.csv")
+
+ColTse_Esc_LB <- ColTse_Esc_LB %>%
+  filter(Preculture_IPTG == "-") %>%
+  filter(Strain == "TH240" | Strain == "TH237")
+ColTse_Esc_LB <- ColTse_Esc_LB %>%
+  select(Strain, CFU_perm, CFU_nonperm, Escape_freq, Replicate) 
+
+ColTse_Esc_LB$Media <- "LB"
+
+CFU_MM_merge <- rbind(CFUs_MM, ColTse_Esc_MM)
+
+CFU_MM_merge <- rbind(CFU_MM_merge, ColTse_Esc_LB)
+
+
+# calculate error bars in data frame
+
+# GO BACK INTO CSV FILE AND REPLACE "0" OR NONDETECTABLE REPLICATES WITH 1 COLONY @ LOD AND MAKE NOTE IN A NEW COLUMN THAT IT WAS UNDETECTABLE
+CFU_means_log_MM <- CFU_MM_merge %>%
+  group_by(Strain, Media) %>%
+  summarise(mean = mean(Escape_freq),
+            se = std(Escape_freq),
+            mean.log = log10(mean(Escape_freq)),
+            se.log = log10(std(Escape_freq)),
+            pos_std = log10(mean(Escape_freq) + std(Escape_freq)),
+            neg_std = log10(mean(Escape_freq) - std(Escape_freq))
+  )
+
+
+CFU_MM_merge$Strain <- factor(CFU_MM_merge$Strain,
+                            levels = c("TH86",
+                                       "TH88",
+                                       "TH99",
+                                       "TH100",
+                                       "TH131",
+                                       "TH126",
+                                       'TH240',
+                                       "TH128",
+                                       "TH237",
+                                       "TH98",
+                                       "TH124",
+                                       "TH214",
+                                       "TH203"))
+
+
+CFU_MM_merge$Media <- factor(CFU_MM_merge$Media, 
+                         levels = c("LB",
+                                    "Succinate",
+                                    "Proline",
+                                    "Glucose"))
+
+
+strain_names <- as_labeller(c('TH37' = "wild type",
+                  'TH86' = "regulators\nonly",
+                  'TH88' = "CcdB\nCcdA",
+                  'TH99' = "HicA\nHicB",
+                  'TH100' = "ParE\nParD",
+                  'TH98' = "EcoRI\nEcoRIM",
+                  'TH124' = "EcoRI (no\nmethylase)",
+                  'TH126' = "Tse2\nTsi2",
+                  'TH240' = "Tse2\nTsi2-ssrA",
+                  'TH128' = "colicin E2\nImmE2",
+                  "TH237" = "colicin E2\nImm-ssrA",
+                  "TH131" = "RelE\nRelB",
+                  "TH203" = "TisB (no\nantitoxin)",
+                  "TH214" = "TisB\nIstR2"
+                  ))
+
+expSup <- function(w, digits=0) {
+  sprintf(paste0("%.", digits, "f*x*10^%d"), w/10^floor(log10(abs(w))), floor(log10(abs(w))))
+}
+
+ggplot(CFUs_MM, aes(x = Media, y = Escape_freq, group = Strain, fill = Strain)) +
+  stat_summary(fun = "mean", geom = "bar") +
+  stat_summary(fun.data = "mean_se", geom = "errorbar") +
+  geom_point(size = 0.8) +
+  #geom_col(data = CFUs_MM_means, aes(y = meanFreq, x = Media, fill = Strain)) +
+  facet_wrap(~Strain, nrow = 11, ncol = 14, labeller = strain_names) +
+  labs( y="survival ratio") +
+  #geom_errorbar(aes(ymin = meanFreq-stdFreq, ymax = meanFreq+stdFreq), width = 0.4) +
+  scale_fill_manual(values = c("TH86" = "gray",
+                                "TH88" = "#EC5E8D",
+                                "TH99" = "#D7A3EC",
+                                "TH100" = "#E0D935",
+                                "TH131" = "#F7AB37",
+                                "TH126" = "#36D81C",
+                                "TH128" = "#4796F5",
+                                "TH98" = "#30ECEC",
+                                "TH124" = "#30ECEC",
+                                "TH203" = "#D4BFDB",
+                                "TH214" = "#D4BFDB")) +
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  #geom_vline(xintercept = c(5.5, 7.5), size = 0.3) +
+  geom_hline(yintercept = 1, color = "black") +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 14),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 0.05),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5, hjust = 0.95),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 14))
+```
+```{r echo=FALSE}
+ggsave(filename = "20220504_EscapeFrequencies_SBW25_MinimalMedia.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 7.5, height = 5, units = "in", device='png', dpi=300)
+```
+
+Import LB data from 2022 04 20 and select escapees selected from IPTG+ precultures
+
+```{r echo=FALSE}
+# RE-PLOT LOG TRANSFORMED DATA ON NORMAL SCALE, OVERLAY DATA POINTS WITH DIFFERENT DATA FRAME
+
+# MAKE PLOT OF ONLY TSE2 and COLICIN FOR FIG. 3
+
+Col_Tse_MM_raw <- filter(.data = CFU_MM_merge, Strain == "TH126" | Strain == "TH128" | Strain == "TH240" | Strain == "TH237")
+Col_Tse_MM_means <- filter(.data = CFU_means_log_MM, Strain == "TH126" | Strain == "TH128"| Strain == "TH240" | Strain == "TH237")
+
+Col_Tse_MM_means$Media <- factor(Col_Tse_MM_means$Media,
+                               levels = c("LB",
+                                          "Succinate",
+                                          "Proline",
+                                          "Glucose"))
+
+Col_Tse_MM_means$Strain <- factor(Col_Tse_MM_means$Strain,
+                               levels = c("TH126",
+                                          "TH240",
+                                          "TH128",
+                                          "TH237"))
+
+Col_Tse_MM_means %>%
+  filter(Strain == "TH240") %>%
+  filter(Media == "Succinate") %>%
+  ggplot() +
+  geom_col(mapping = aes(x = Strain, y = mean.log, group = Strain, color = Strain, fill = Strain, size = 0.01), size = 0) +
+  #geom_point(data=Col_Tse_MM_raw, mapping = aes(x = Strain, y = log10(Escape_freq), group = Strain), color = "black") +
+  #facet_wrap(~ Media, nrow = 11, ncol = 14) +
+  labs(y=expression('log'[10]*' survival ratio')) +
+  geom_errorbar(mapping=aes(x=Strain,
+                             y=mean.log,
+                             ymin = neg_std,
+                             ymax = pos_std),
+                color = "black",
+                width = 0.4) +
+ scale_fill_manual(values = c(
+                   "TH240" = "#A0DA14")) +  
+                   # scale_fill_manual(values = c("TH86" = "gray",
+  #                               "TH88" = "#EC5E8D",
+  #                               "TH99" = "#D7A3EC",
+  #                               "TH100" = "#E0D935",
+  #                               "TH131" = "#F7AB37",
+  #                               "TH126" = "#36D81C",
+  #                               "TH240" = "#36D81C",
+  #                               "TH128" = "#4796F5",
+  #                               "TH237" = "#4796F5",
+  #                               "TH98" = "#30ECEC",
+  #                               "TH124" = "#30ECEC",
+  #                               "TH203" = "#D4BFDB",
+  #                               "TH214" = "#D4BFDB")) +
+  # scale_color_manual(values = c("TH86" = "gray",
+  #                               "TH88" = "#EC5E8D",
+  #                               "TH99" = "#D7A3EC",
+  #                               "TH100" = "#E0D935",
+  #                               "TH131" = "#F7AB37",
+  #                               "TH126" = "#36D81C",
+  #                               "TH240" = "#36D81C",
+  #                               "TH128" = "#4796F5",
+  #                               "TH237" = "#4796F5",
+  #                               "TH98" = "#30ECEC",
+  #                               "TH124" = "#30ECEC",
+  #                               "TH203" = "#D4BFDB",
+  #                               "TH214" = "#D4BFDB")) +
+  # scale_y_log10(
+  #   breaks = scales::trans_breaks("log10", function(x) 10^x),
+  #   labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  #geom_vline(xintercept = c(5.5, 7.5), size = 0.3) +
+  #scale_y_continuous(limits = c(-8.5,2)) +
+  scale_y_continuous(limits=c(-7,1), breaks = c(-1,-2,-3,-4,-5,-6,-7)) +
+  geom_hline(yintercept = 0.8, color = "black") +
+  theme_classic() +
+    theme(text = element_text(size = 12),
+        panel.background = element_rect(fill = "transparent",colour = NA), # or theme_blank()
+        plot.background = element_rect(fill = "transparent", color = NA),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 14),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(size = 12, vjust = -1, hjust = 0.5),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5, hjust = 0.95),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 14)
+  )
+```
+
+```{r echo=FALSE}
+ggsave(filename = "20220504_EscapeFrequencies_TH240_Succinate.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 1, height = 4.2, units = "in", device='png', dpi=300, bg = "transparent")
+```
+
+Graph by CFU/mL, as some cultures clearly had a growth defect in IPTG
+
+```{r echo=FALSE}
+
+CFUs_means2 <- CFUs_MM %>%
+  group_by(Strain, Media) %>%
+  summarise_at(.vars = ('CFU_perm'), .funs = c(meanCFUperm = mean,
+                                             stdCFU_perm = std))
+
+
+CFUs_means2$Strain <- factor(CFUs_means2$Strain,
+                            levels = c("TH86",
+                                       "TH88",
+                                       "TH99",
+                                       "TH100",
+                                       "TH131",
+                                       "TH126",
+                                       "TH128",
+                                       "TH98",
+                                       "TH124",
+                                       "TH214",
+                                       "TH203"))
+
+CFUs_means2$Media <- factor(CFUs_means2$Media, 
+                         levels = c("LB",
+                                    "Succinate",
+                                    "Proline",
+                                    "Glucose"))
+
+
+ggplot(data = CFU_MM_merge, x = Media, y = CFU_perm) +
+  geom_point(aes(x = Media, y = CFU_perm, group = Strain, color = Strain)) +
+  facet_wrap(~Strain, nrow = 11, ncol = 14, labeller = strain_names) +
+  labs(y="CFU/mL, permissive selection") +
+  #geom_errorbar(aes(ymin = meanCFUperm-stdCFU_perm, ymax = meanCFUperm+stdCFU_perm), width = 0.4) +
+  stat_summary(aes(x=Media, y=CFU_perm), fun = "mean", geom = "bar") +
+  scale_fill_manual(values = c("TH86" = "gray",
+                                "TH88" = "#EC5E8D",
+                                "TH99" = "#D7A3EC",
+                                "TH100" = "#E0D935",
+                                "TH131" = "#F7AB37",
+                                "TH126" = "#36D81C",
+                                "TH128" = "#4796F5",
+                                "TH98" = "#30ECEC",
+                                "TH124" = "#30ECEC",
+                                "TH203" = "#D4BFDB",
+                                "TH214" = "#D4BFDB")) +
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  geom_vline(xintercept = c(5.5, 7.5), size = 0.3) +
+  geom_hline(yintercept = 1, color = "black") +
+  theme_classic() +
+  theme(text = element_text(size = 12),
+        strip.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(color = "black", face = "bold", size = 14),
+        axis.text = element_text(size = 14), 
+        strip.text = element_text(size = 9, angle = 90, vjust = 0.5, hjust = 0),
+        legend.position = "none",
+        legend.title = element_text(size = 12),
+        axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 0.95),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 14)
+        )
+```
+
+```{r echo=FALSE}
+ggsave(filename = "20220504_EscapeFrequencies_SBW25_MinimalMedia_withLB_permissiveCFU.png", path = "/Users/halvorsen1/SFA_killswitches/results/figures", width = 7.5, height = 4, units = "in", device='png', dpi=300)
+```
+
+Compute P-value for EcoRI-EcoRIM samples and Tse2-Tsi2/ColE2-ImmE2 samples
+
+To compute student's T test, need to check 3 assumptions:
+1. Samples are independent of one another
+2. Data from each group follows a normal distribution (test with Shapiro-Wilk test)
+3. The two populations have the same variances (test with F-test)
+
+```{r echo=FALSE}
+library(rstatix)
+CFUs$Media <- 'LB'
+CFUs_MM_TH98 <- filter(CFUs_MM, Strain == "TH98")
+CFUs_TH98 <- CFUs %>%
+  filter(Pre_growth == "IPTG+" & Strain == "TH98") %>%
+  select(-Pre_growth, -Species)
+
+CFUs_all_TH98 <- rbind(CFUs_MM_TH98, CFUs_TH98[-c(6)])
+
+CFUs_MM_TH126 <- filter(CFUs_MM, Strain == "TH126")
+CFUs_TH126 <- CFUs %>%
+  filter(Pre_growth == "IPTG+" & Strain == "TH126") %>%
+  select(-Pre_growth, -Species)
+
+CFUs_all_TH126 <- rbind(CFUs_MM_TH126, CFUs_TH126[-c(6)])
+
+CFUs_MM_TH128 <- filter(CFUs_MM, Strain == "TH128")
+CFUs_TH128 <- CFUs %>%
+  filter(Pre_growth == "IPTG+" & Strain == "TH128") %>%
+  select(-Pre_growth, -Species)
+
+CFUs_all_TH128 <- rbind(CFUs_MM_TH128, CFUs_TH128[-c(6)])
+
+#Perform Shapiro-Wilk normality test on each group of samples to determine if they are normally distributed.
+#P-value must be greater than 0.05 to imply that the distribution of the data re not significantly
+#different from the normal distribution (we can assume normality)
+
+with(CFUs_all_TH98, shapiro.test(Escape_freq[Media == "LB"]))# p = 0.1395
+with(CFUs_all_TH98, shapiro.test(Escape_freq[Media == "Succinate"]))# p = 0.2617
+with(CFUs_all_TH98, shapiro.test(Escape_freq[Media == "Proline"]))# p = 0.4769
+with(CFUs_all_TH98, shapiro.test(Escape_freq[Media == "Glucose"]))# p = 0.7706
+
+
+# Next perform F-test for homogeneity in variances
+
+CFUs_all_TH98 <- CFUs_all_TH98 %>%
+  filter(Media == "LB" | Media == "Glucose")
+
+var.test(Escape_freq ~ Media, data = CFUs_all_TH98) #p = 0.1895, with additional 3 replicates, P-value is now 0.005146
+
+#Between LB and proline F-test resulted in P-value of 0.1895, with additional 3 replicates, P-value is now 0.005146
+
+#Between LB and succinate F-tests resulted in P-value of 0.0007637 which is lower than 0.05, 
+# meaning we cannot use classic t-test which assumes equality of the two variances. Will have to
+# overcome the violation of this assumption (of homogeneity of variance) by not using the pooled estimate
+# for the error term for the t-statistic but instead using an adjustment to the degrees of freedom
+# using the Welch-Satterthwaite method (Welch's t-test)
+
+
+#Between LB and glucose the F-test resulted in P-value of 0.004635, which is lower than the
+# significance value of 0.05. Therefore, will have to use Welch's T-test for these samples as well.
+
+
+# Compute T-test
+
+res <- t_test(CFUs_all_TH98, Escape_freq ~ Media, ref.group = "LB", var.equal = TRUE) 
+
+
+res_TH98 <- compare_means(Escape_freq ~ Media,  data = CFUs_all_TH98, ref.group = "LB",
+              method = "t.test")
+
+
+
+
+
+# one-way ANOVA tests within each strain across treatments
+
+
+
+
+
+CFU_MM_merge$Escape_freq <- log10(CFU_MM_merge$Escape_freq)
+
+
+#Isolate TH88 as a small data frame of groups
+TH88 <- filter(.data = CFU_MM_merge, Strain  == "TH88")
+
+#Do not need to perform ANOVA assuming unequal variance
+leveneTest(Escape_freq ~ Media, data = TH88)
+# P-value 0.6543, proceed with anova
+#Perform one-way ANOVA test between means of each group
+oneway.test(Escape_freq ~ Media, data = TH88)
+# P-value 0.0.04057, significant between media
+
+ttest_88b <- compare_means(Escape_freq ~ Media,  data = TH88,
+              method = "t.test")
+
+
+#Isolate TH99 as a small data frame of groups
+TH99 <- filter(.data = CFU_MM_merge, Strain  == "TH99")
+
+#Do not need to perform ANOVA assuming unequal variance
+leveneTest(Escape_freq ~ Media, data = TH99)
+# P-value 0.5873, proveed with aov()
+#Perform one-way ANOVA test between means of each group
+oneway.test(Escape_freq ~ Media, data = TH99)
+
+# P-value 0.0695, not significant across media
+
+# Still want to try paired T test
+ttest_99 <- compare_means(Escape_freq ~ Media,  data = TH99,
+              method = "t.test")
+# Proline is significant - Adjusted P-value of 0.035
+
+
+
+#Isolate TH100 as a small data frame of groups
+TH100 <- filter(.data = CFU_MM_merge, Strain  == "TH100")
+
+# Need to perform ANOVA test with no assumption of equal variance
+leveneTest(Escape_freq ~ Media, data = TH100)
+# P-value is 0.0001286, so must not assume variance across media is equal
+
+#Perform one-way ANOVA test between means of each group
+one.way_100 <- oneway.test(Escape_freq ~ Media, data = TH100)
+# nTH100 Results: F = 8.9766, num df = 3.0000, denom df = 5.4376, p-value = 0.01543
+
+# There is significance, so perform paired T-test between individual groups.
+ttest_100 <- compare_means(Escape_freq ~ Media,  data = TH100,
+              method = "t.test")
+# Proline and succinate are significant, with P-values of 0.052 and 0.019, respectively
+
+
+
+#Isolate TH131 as a small data frame of groups
+TH131 <- filter(.data = CFU_MM_merge, Strain  == "TH131")
+
+
+# Can assume equal variance
+leveneTest(Escape_freq ~ Media, data = TH131)
+
+#Perform one-way ANOVA test between means of each group
+one.way_131 <- oneway.test(Escape_freq ~ Media, data = TH131)
+summary(one.way_131)
+
+# not significant, but double check with t-test
+ttest_131 <- compare_means(Escape_freq ~ Media,  data = TH131,
+              method = "t.test")
+
+
+
+
+#Isolate TH98 as a small data frame of groups
+TH98 <- filter(.data = CFU_MM_merge, Strain  == "TH98")
+leveneTest(Escape_freq ~ Media, data = TH100)
+# P value of levene test to test for homogeneity of variance resulted in a significant p value of 0.008011 for TH98.
+# Thus, will need to perform an ANOVA test with no assumption of equal variances
+
+# Perform one-way ANOVA test between means of each group,
+# no assumption of equal variance
+one.way_98 <- oneway.test(Escape_freq ~ Media, data = TH98, var.equal = FALSE)
+# Results: F = 6.6117, num df = 3.0000, denom df = 5.6467, p-value = 0.02772
+
+TukeyHSD(aov(Escape_freq ~ Media, data = TH237), conf.level = 0.95)
+
+plot(one.way_98, 2)
+with(TH98, t.test(Escape_freq ~ Media))
+
+ttest_98 <- compare_means(Escape_freq ~ Media,  data = TH98, ref.group = "Succinate",
+              method = "t.test")
+
+t.test(Escape_freq ~ Media, data = TH98)
+
+ggplot(TH98, aes(x=Replicate, y=log10(Escape_freq))) +
+  geom_col()+
+  facet_wrap(~Media)
+
+
+TH214 <- filter(.data = CFU_MM_merge, Strain  == "TH214")
+#Isolate TH124 as a small data frame of groups
+TH124 <- filter(.data = CFU_MM_merge, Strain  == "TH124")
+
+#Do not need to perform ANOVA assuming unequal variance
+leveneTest(Escape_freq ~ Media, data = TH124)
+# P-value 0.5873, proveed with aov()
+#Perform one-way ANOVA test between means of each group
+one.way_124 <- oneway.test(Escape_freq ~ Media, data = TH124, var.equal = FALSE)
+summary(one.way_124) 
+# P-value 0.0695, not significant across media
+
+# Still want to try paired T test
+ttest_124 <- compare_means(Escape_freq ~ Media,  data = TH124, ref.group = "Proline",
+              method = "t.test")
+# Proline is significant - Adjusted P-value of 0.035
+
+
+
+#Isolate TH203 as a small data frame of groups
+TH203 <- filter(.data = CFU_MM_merge, Strain  == "TH203")
+leveneTest(Escape_freq ~ Media, data = TH203)
+# P value = 0.3437, proceed with aov()
+one.way_203 <- aov(Escape_freq ~ Media, data = TH203)
+summary(one.way_203)
+# P value = 0.354, not significant across media
+ttest_203 <- compare_means(Escape_freq ~ Media,  data = TH203,
+              method = "t.test")
+
+#Isolate TH126 as a small data frame of groups
+TH126 <- filter(.data = CFU_MM_merge, Strain  == "TH126")
+leveneTest(Escape_freq ~ Media, data = TH126)
+# P value = 0.5, proceed with aov()
+one.way_126 <- aov(Escape_freq ~ Media, data = TH126)
+summary(one.way_126)
+# P value - 0.511, not significant across media
+ttest_126 <- compare_means(Escape_freq ~ Media,  data = TH126,
+              method = "t.test")
+
+#Isolate TH128 as a small data frame of groups
+TH128 <- filter(.data = CFU_MM_merge, Strain  == "TH128")
+leveneTest(Escape_freq ~ Media, data = TH128)
+# P value = 0.572, proceed with aov()
+one.way_128 <- aov(Escape_freq ~ Media, data = TH128)
+summary(one.way_128)
+# P value = 0.572, not significant across media
+ttest_128 <- compare_means(Escape_freq ~ Media,  data = TH128,
+              method = "t.test")
+
+
+TH240 <- filter(.data = Col_Tse_MM_raw, Strain == "TH240")
+leveneTest(Escape_freq ~ Media, data = TH240)
+one.way_240 <- aov(Escape_freq ~ Media, data = TH240)
+summary(one.way_240)
+# P value 0.0711, not significant across media
+
+TH126_TH240 <- filter(.data = Col_Tse_MM_raw, Strain == "TH240" | Strain == "TH126")
+
+LB <- Col_Tse_MM_raw %>%
+  mutate(ID = row_number()) %>%
+  #filter(Strain == "TH126" | Strain == "TH240") %>%
+  filter(Media == "Succinate")
+
+glucose$Escape_freq <- log10(glucose$Escape_freq)
+
+TukeyHSD(aov((Escape_freq) ~ Strain, data = succinate, conf.level = 0.95))
+
+#with(Col_Tse_MM_raw, group.by = Media, t.test(Escape_freq[Strain == "TH126"], Escape_freq[Strain == "TH240"]))
+
+t_test(data = proline, Escape_freq ~ Strain)
+
+ttest_240_126_glu <- compare_means(data = glucose, Escape_freq ~ Strain,
+              method = "t.test")
+
+TH237 <- filter(.data = CFU_MM_merge, Strain == "TH237")
+leveneTest(Escape_freq ~ Media, data = TH237)
+one.way_237 <- aov(Escape_freq ~ Media, data = TH237)
+summary(one.way_237)
+# P value of 0.0208, significant across media
+```
